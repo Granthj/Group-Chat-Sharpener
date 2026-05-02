@@ -4,8 +4,8 @@ export function Login() {
         <div class="container-div">
             <form>
                 <div id="emailDiv">
-                    <label for="email">Email or Phone:</label>
-                    <input type="email" id="email" name="email" placeholder="Write email or phonenumber">
+                    <label for="username">Email or Phone:</label>
+                    <input type="username" id="username" name="username" placeholder="Write email or phonenumber">
                 </div>
 
                 <div id="passwordDiv">
