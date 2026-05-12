@@ -1,4 +1,4 @@
-    * {
+    /* * {
       margin: 0;
       padding: 0;
       box-sizing: border-box;
@@ -11,9 +11,8 @@
       justify-content: center;
       align-items: center;
       height: 100vh;
-    }
+    } */
 
-    /* Main chat box */
     .chat-box {
       width: 380px;
       height: 550px;
@@ -24,7 +23,6 @@
       flex-direction: column;
     }
 
-    /* Top header */
     .chat-header {
       background-color: #075e54;
       color: white;
@@ -65,7 +63,6 @@
       color: #c8e6c9;
     }
 
-    /* Messages area */
     .messages {
       flex: 1;
       padding: 14px;
@@ -76,7 +73,6 @@
       gap: 8px;
     }
 
-    /* Scrollbar style */
     .messages::-webkit-scrollbar {
       width: 5px;
     }
@@ -86,7 +82,6 @@
       border-radius: 10px;
     }
 
-    /* Single message */
     .message {
       max-width: 70%;
       padding: 8px 12px;
@@ -96,21 +91,18 @@
       position: relative;
     }
 
-    /* Received message - left side */
     .message.received {
       background-color: #ffffff;
       align-self: flex-start;
       border-top-left-radius: 0;
     }
 
-    /* Sent message - right side */
     .message.sent {
       background-color: #dcf8c6;
       align-self: flex-end;
       border-top-right-radius: 0;
     }
 
-    /* Timestamp inside message */
     .message .time {
       font-size: 10px;
       color: #888;
@@ -118,7 +110,6 @@
       margin-top: 4px;
     }
 
-    /* Input area at bottom */
     .chat-input {
       display: flex;
       align-items: center;
