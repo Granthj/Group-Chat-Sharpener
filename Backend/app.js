@@ -3,7 +3,7 @@ const app = express();
 const cors = require('cors');
 const path = require('path');
 const http = require('http');
-const wss = require('sockjs');
+const {Server} = require('socket.io');
 const db = require('./Utils/db');
 const ConversationParticipants = require('./Model/conversationParticipantsSchema');
 const Conversation = require('./Model/conversationSchema');
@@ -43,68 +43,12 @@ User.belongsToMany(Conversation, {
 });
 
 const server = http.createServer(app);
-const socketServer = wss.createServer();
-const client = {};
-
-socketServer.on('connection', (conn) => {
-    console.log('Websocket connected');
-
-    const connectionId = conn.id;
-
-    clients[connectionId] = conn;
-
-
-    conn.on('data', async (message) => {
-
-        /*
-        Example incoming message:
-    
-        {
-          senderId:1,
-          receiverId:2,
-          text:"hello"
-        }
-        */
-
-        const parsedMessage = JSON.parse(message);
-
-        console.log(parsedMessage);
-
-        const savedMessage =
-            await Message.create({
-    
-                conversationId:
-                    parsedMessage.conversationId,
-    
-                senderId:
-                    parsedMessage.senderId,
-    
-                text:
-                    parsedMessage.text
-    
-            });
-
-    Object.values(clients).forEach(client => {
-
-        client.write(
-          JSON.stringify(savedMessage)
-        );
-
-      });
-
-  });
-    conn.on('close', () => {
-
-    console.log('WebSocket Disconnected');
-
-    delete clients[connectionId];
-
-  });
-
+const io = new Server(server,{
+    cors:{
+        origin:"*"
+    }
 });
-sockServer.installHandlers(server, {
-  prefix: '/chat'
-});
+
 const PORT = process.env.PORT || 5000;
 
 db.sync().then(() => {
