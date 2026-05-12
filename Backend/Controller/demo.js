@@ -1,78 +1,44 @@
-// controllers/chat.js
-
-const {
-  Conversation,
-  Message,
-  ConversationParticipant,
-} = require("../models");
-
-const sendMessage = async (req, res) => {
+async function loadMessages(conversationId) {
 
   try {
 
-    const { senderId, receiverId, text } = req.body;
+    const response = await axios.get(
+      `http://localhost:3000/messages/${conversationId}`
+    );
 
-    // STEP 1: find existing conversation
-    let conversation = await Conversation.findOne({
-      include: [
-        {
-          model: ConversationParticipant,
-          where: {
-            userId: [senderId, receiverId],
-          },
-        },
-      ],
-    });
+    const messages = response.data.messages;
 
-    // STEP 2: if no conversation create one
-    if (!conversation) {
+    const messagesContainer =
+      document.getElementById("messages");
 
-      conversation = await Conversation.create({
-        isGroup: false,
-      });
+    messagesContainer.innerHTML = "";
 
-      // add participants
-      await ConversationParticipant.bulkCreate([
-        {
-          conversationId: conversation.id,
-          userId: senderId,
-        },
-        {
-          conversationId: conversation.id,
-          userId: receiverId,
-        },
-      ]);
-    }
+    messages.forEach(msg => {
 
-    // STEP 3: create message
-    const message = await Message.create({
-      conversationId: conversation.id,
-      senderId,
-      text,
-    });
+      const div = document.createElement("div");
 
-    // STEP 4: update last message
-    await conversation.update({
-      lastMessageId: message.id,
-      lastMessageAt: message.createdAt,
-    });
+      // suppose current logged in user = 101
+      if (msg.senderId === 101) {
+        div.className = "message sent";
+      } else {
+        div.className = "message received";
+      }
 
-    res.status(201).json({
-      success: true,
-      message,
+      div.innerHTML = `
+        <p>${msg.text}</p>
+        <div class="time">
+          ${new Date(msg.createdAt)
+            .toLocaleTimeString()}
+        </div>
+      `;
+
+      messagesContainer.appendChild(div);
+
     });
 
   } catch (error) {
 
     console.log(error);
 
-    res.status(500).json({
-      success: false,
-      message: "Something went wrong",
-    });
   }
-};
-
-module.exports = {
-  sendMessage,
-};
+}
