@@ -9,6 +9,7 @@ const ConversationParticipants = require('./Model/conversationParticipantsSchema
 const Conversation = require('./Model/conversationSchema');
 const Message = require('./Model/messageSchema');
 const User = require('./Model/signupSchema');
+const socketIO = require('../Backend/Socket_io/index.js');
 
 const apiRoutes = require('./Routes/apiRoutes');
 
@@ -43,11 +44,7 @@ User.belongsToMany(Conversation, {
 });
 
 const server = http.createServer(app);
-const io = new Server(server,{
-    cors:{
-        origin:"*"
-    }
-});
+const io = socketIO(server);
 io.use(async (socket,next)=>{
     
     try{
