@@ -31,7 +31,7 @@ const chatMessage = async (req, res) => {
                 },
                 {
                     conversationId: conversation.id,
-                    userId: senderId
+                    userId: recieverId
                 }
             ]);
         }
@@ -42,7 +42,7 @@ const chatMessage = async (req, res) => {
             text: text
         });
 
-        const updateMessage = await Conversation.update({
+        const updateMessage = await conversation.update({
             lastMessageId: addMessage.id,
             lastMessageAt: addMessage.createdAt
         });

@@ -36,7 +36,7 @@ export function ChatWindow() {
 
       const response = await axios.get(`${API_URL}/message/${conversationId}`);
 
-      container.querySelector('#messages');
+      const msgContainer = container.querySelector('#messages');
 
       msgContainer.innerHTML = '';
 
@@ -101,6 +101,7 @@ export function ChatWindow() {
       senderId: currentUserId,
       text,
       createdAt: new Date()
+
     });
     msgInput.value = '';
   }
