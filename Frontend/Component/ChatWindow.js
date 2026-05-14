@@ -2,7 +2,7 @@ import { API_URL } from '../Src/Config.js';
 import { io } from 'socket.io-client';
 const socket = io();
 
-export function ChatWindow() {
+export function ChatWindow(conversation) {
 
   const container = document.createElement('div');
   container.innerHTML = `
@@ -28,7 +28,7 @@ export function ChatWindow() {
   </div>
 `;
   const currentUserId = Number(localStorage.getItem('userId'));
-  const conversationId = 1;
+  const conversationId = conversation.conversationId;
 
   async function loadChatMessage(conversationId) {
 

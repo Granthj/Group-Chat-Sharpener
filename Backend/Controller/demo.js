@@ -1,44 +1,120 @@
-async function loadMessages(conversationId) {
+export function Sidebar({ onSelectConversation }) {
 
-  try {
+    const container = document.createElement('div');
 
-    const response = await axios.get(
-      `http://localhost:3000/messages/${conversationId}`
-    );
+    container.className = 'sidebar';
 
-    const messages = response.data.messages;
+    container.innerHTML = `
+    
+        <div class="sidebar-top">
 
-    const messagesContainer =
-      document.getElementById("messages");
+            <h2 class="sidebar-title">Chats</h2>
 
-    messagesContainer.innerHTML = "";
+            <div class="search-box">
+                <input 
+                    type="text" 
+                    id="search-user" 
+                    placeholder="Search users..."
+                />
+            </div>
 
-    messages.forEach(msg => {
-
-      const div = document.createElement("div");
-
-      // suppose current logged in user = 101
-      if (msg.senderId === 101) {
-        div.className = "message sent";
-      } else {
-        div.className = "message received";
-      }
-
-      div.innerHTML = `
-        <p>${msg.text}</p>
-        <div class="time">
-          ${new Date(msg.createdAt)
-            .toLocaleTimeString()}
         </div>
-      `;
 
-      messagesContainer.appendChild(div);
+        <div class="conversation-list"></div>
+    `;
 
+    const users = [
+        {
+            id: 1,
+            name: 'Aman',
+            lastMessage: 'Hey bro',
+            time: '10:30 AM',
+            conversationId: 1
+        },
+        {
+            id: 2,
+            name: 'Priya',
+            lastMessage: 'Where are you?',
+            time: '11:15 AM',
+            conversationId: 2
+        },
+        {
+            id: 3,
+            name: 'Rahul',
+            lastMessage: 'Okay done',
+            time: 'Yesterday',
+            conversationId: 3
+        }
+    ];
+
+    const conversationList = container.querySelector('.conversation-list');
+
+    function renderUsers(list) {
+
+        conversationList.innerHTML = '';
+
+        list.forEach(user => {
+
+            const userDiv = document.createElement('div');
+
+            userDiv.className = 'conversation-item';
+
+            userDiv.innerHTML = `
+            
+                <div class="avatar">
+                    ${user.name.charAt(0).toUpperCase()}
+                </div>
+
+                <div class="conversation-content">
+
+                    <div class="conversation-header">
+
+                        <h4>${user.name}</h4>
+
+                        <span class="time">
+                            ${user.time}
+                        </span>
+
+                    </div>
+
+                    <p class="last-message">
+                        ${user.lastMessage}
+                    </p>
+
+                </div>
+            `;
+
+            userDiv.addEventListener('click', () => {
+
+                document
+                    .querySelectorAll('.conversation-item')
+                    .forEach(item => {
+                        item.classList.remove('active');
+                    });
+
+                userDiv.classList.add('active');
+
+                onSelectConversation(user);
+            });
+
+            conversationList.appendChild(userDiv);
+        });
+    }
+
+    renderUsers(users);
+
+    const searchInput = container.querySelector('#search-user');
+
+    searchInput.addEventListener('input', (e) => {
+
+        const value = e.target.value.toLowerCase();
+
+        const filteredUsers = users.filter(user =>
+            user.name.toLowerCase().includes(value)
+        );
+
+        renderUsers(filteredUsers);
     });
 
-  } catch (error) {
-
-    console.log(error);
-
-  }
+    return container;
 }
