@@ -22,7 +22,7 @@ const ConversationParticipants = db.define('ConversationParticipants',{
     indexes:[
         {
             unique:true,
-            fields:['converstionId','userId']
+            fields:['conversationId','userId']
         }
     ]
 

@@ -1,5 +1,5 @@
 import { API_URL } from '../Src/Config.js';
-import { io } from 'socket.io-client';
+// import { io } from 'socket.io-client';
 const socket = io();
 
 export function ChatWindow(conversation) {

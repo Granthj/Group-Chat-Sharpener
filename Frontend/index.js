@@ -1,6 +1,7 @@
-import {Signup} from './Component/Signup.js';
-import {Login} from './Component/Login.js';
-import {ChatWindow} from './Component/ChatWindow.js';
+import {Signup} from './Pages/Signup.js';
+import {Login} from './Pages/Login.js';
+// import {ChatWindow} from './Component/ChatWindow.js';
+import { ChatPage } from './Pages/ChatPage.js';
 
 const app = document.getElementById('app');
 app.innerHTML = "";
@@ -16,7 +17,7 @@ function render(route){
             app.appendChild(Signup(navigate));
             break;
         case "/chat":
-            app.appendChild(ChatWindow(navigate));
+            app.appendChild(ChatPage(navigate));
             break;    
         default:
             app.innerHTML = "<h2>404 page not found</h2>"

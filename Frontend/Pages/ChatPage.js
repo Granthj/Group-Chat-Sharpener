@@ -1,7 +1,7 @@
 import {Sidebar} from '../Component/Sidebar.js';
 import {ChatWindow} from '../Component/ChatWindow.js';
 
-export function ChatPage(){
+export function ChatPage(navigate){
 
     const container = document.createElement('div');
     container.className = 'chat-page';

@@ -9,7 +9,7 @@ const ConversationParticipants = require('./Model/conversationParticipantsSchema
 const Conversation = require('./Model/conversationSchema');
 const Message = require('./Model/messageSchema');
 const User = require('./Model/signupSchema');
-const socketIO = require('../Backend/Socket_io/index.js');
+// const socketIO = require('../Backend/Socket_io/index.js');
 
 const apiRoutes = require('./Routes/apiRoutes');
 
@@ -44,27 +44,27 @@ User.belongsToMany(Conversation, {
 });
 
 const server = http.createServer(app);
-const io = socketIO(server);
-io.use(async (socket,next)=>{
+// const io = socketIO(server);
+// io.use(async (socket,next)=>{
     
-    try{
-            const token = socket.handshake.auth.token;
+//     try{
+//             const token = socket.handshake.auth.token;
     
-            if(!token){
-                next(new Error('Token is missing in socket handshake'));
-            }
+//             if(!token){
+//                 next(new Error('Token is missing in socket handshake'));
+//             }
     
-            const decode = jwt.verify(token,'chat-userId');
+//             const decode = jwt.verify(token,'chat-userId');
     
-            socket.user = decode.user;
-            socket.auth = true;
+//             socket.user = decode.user;
+//             socket.auth = true;
 
-            next();
-        }
-        catch(err){
-            return next(new Error("Token is missing from socket"));
-        }
-})
+//             next();
+//         }
+//         catch(err){
+//             return next(new Error("Token is missing from socket"));
+//         }
+// })
 
 const PORT = process.env.PORT || 5000;
 
