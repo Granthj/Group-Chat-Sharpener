@@ -1,120 +1,98 @@
-export function Sidebar({ onSelectConversation }) {
+const { Op } = require('sequelize');
 
-    const container = document.createElement('div');
+const User = require('../Model/signupSchema');
+const Conversation = require('../Model/conversationSchema');
+const ConversationParticipants = require('../Model/conversationParticipantsSchema');
+const Message = require('../Model/messageSchema');
 
-    container.className = 'sidebar';
+const getAllUsers = async(req,res)=>{
 
-    container.innerHTML = `
-    
-        <div class="sidebar-top">
+    try{
 
-            <h2 class="sidebar-title">Chats</h2>
+        const currentUserId = req.user.id;
 
-            <div class="search-box">
-                <input 
-                    type="text" 
-                    id="search-user" 
-                    placeholder="Search users..."
-                />
-            </div>
+        // all users except logged-in user
+        const users = await User.findAll({
+            where:{
+                id:{
+                    [Op.ne]: currentUserId
+                }
+            }
+        });
 
-        </div>
+        const sidebarUsers = [];
 
-        <div class="conversation-list"></div>
-    `;
+        for(const user of users){
 
-    const users = [
-        {
-            id: 1,
-            name: 'Aman',
-            lastMessage: 'Hey bro',
-            time: '10:30 AM',
-            conversationId: 1
-        },
-        {
-            id: 2,
-            name: 'Priya',
-            lastMessage: 'Where are you?',
-            time: '11:15 AM',
-            conversationId: 2
-        },
-        {
-            id: 3,
-            name: 'Rahul',
-            lastMessage: 'Okay done',
-            time: 'Yesterday',
-            conversationId: 3
-        }
-    ];
-
-    const conversationList = container.querySelector('.conversation-list');
-
-    function renderUsers(list) {
-
-        conversationList.innerHTML = '';
-
-        list.forEach(user => {
-
-            const userDiv = document.createElement('div');
-
-            userDiv.className = 'conversation-item';
-
-            userDiv.innerHTML = `
-            
-                <div class="avatar">
-                    ${user.name.charAt(0).toUpperCase()}
-                </div>
-
-                <div class="conversation-content">
-
-                    <div class="conversation-header">
-
-                        <h4>${user.name}</h4>
-
-                        <span class="time">
-                            ${user.time}
-                        </span>
-
-                    </div>
-
-                    <p class="last-message">
-                        ${user.lastMessage}
-                    </p>
-
-                </div>
-            `;
-
-            userDiv.addEventListener('click', () => {
-
-                document
-                    .querySelectorAll('.conversation-item')
-                    .forEach(item => {
-                        item.classList.remove('active');
-                    });
-
-                userDiv.classList.add('active');
-
-                onSelectConversation(user);
+            // find conversations of current user
+            const myConversations = await ConversationParticipants.findAll({
+                where:{
+                    userId: currentUserId
+                }
             });
 
-            conversationList.appendChild(userDiv);
+            const conversationIds = myConversations.map(
+                convo => convo.conversationId
+            );
+
+            // check if other user exists in same conversation
+            const sharedConversation = await ConversationParticipants.findOne({
+                where:{
+                    userId: user.id,
+                    conversationId:{
+                        [Op.in]: conversationIds
+                    }
+                }
+            });
+
+            // no conversation yet
+            if(!sharedConversation){
+
+                sidebarUsers.push({
+                    userId: user.id,
+                    name: user.name,
+                    lastMessage: null,
+                    lastMessageAt: null
+                });
+
+                continue;
+            }
+
+            // get conversation
+            const conversation = await Conversation.findByPk(
+                sharedConversation.conversationId
+            );
+
+            let lastMessage = null;
+
+            if(conversation.lastMessageId){
+
+                lastMessage = await Message.findByPk(
+                    conversation.lastMessageId
+                );
+            }
+
+            sidebarUsers.push({
+                userId: user.id,
+                name: user.name,
+                lastMessage: lastMessage ? lastMessage.text : null,
+                lastMessageAt: conversation.lastMessageAt || null
+            });
+
+        }
+
+        return res.status(200).json(sidebarUsers);
+
+    }catch(error){
+
+        console.log(error);
+
+        return res.status(500).json({
+            message:"Internal server error"
         });
     }
-
-    renderUsers(users);
-
-    const searchInput = container.querySelector('#search-user');
-
-    searchInput.addEventListener('input', (e) => {
-
-        const value = e.target.value.toLowerCase();
-
-        const filteredUsers = users.filter(user =>
-            user.name.toLowerCase().includes(value)
-        );
-
-        renderUsers(filteredUsers);
-    });
-
-    return container;
 }
+
+module.exports = {
+    getAllUsers
+};
