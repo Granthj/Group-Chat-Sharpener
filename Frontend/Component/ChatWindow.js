@@ -1,8 +1,12 @@
 import { API_URL } from '../Src/Config.js';
-// import { io } from 'socket.io-client';
-const socket = io();
+import { io } from 'socket.io-client';
+const socket = io(API_URL,{
+  auth:{
+    token:localStorage.getItem('token')
+  }
+});
 
-export function ChatWindow(conversation) {
+export function ChatWindow(conversation,id) {
 
   const container = document.createElement('div');
   container.innerHTML = `
@@ -28,7 +32,8 @@ export function ChatWindow(conversation) {
   </div>
 `;
   const currentUserId = Number(localStorage.getItem('userId'));
-  const conversationId = conversation.conversationId;
+  let conversationId = conversation;
+  let receiverId = id;
 
   async function loadChatMessage(conversationId) {
 
@@ -96,19 +101,37 @@ export function ChatWindow(conversation) {
       return;
     }
 
-    socket.emit('sendMessage', {
-      conversationId,
-      senderId: currentUserId,
-      text,
-      createdAt: new Date()
+    if(conversationId){
+      socket.emit('sendMessage', {
+  
+        conversationId,
+        senderId: currentUserId,
+        text,
+        createdAt: new Date()
+  
+      });
+    }
+    else{
+      socket.emit('sendMessage',{
 
-    });
+        receiverId,
+        senderId: currentUserId,
+        text,
+        createdAt: new Date()
+      });
+    }
     msgInput.value = '';
   }
+  socket.off('receiveMessage');
   socket.on('receiveMessage', (msg) => {
-    addMessage(msg);
+    if(!conversationId){
+      conversationId = msg.conversationId;
+      socket.emit('joinConversation',conversationId);
+    }
+    if(conversationId === msg.conversationId){
+      addMessage(msg);
+    }
   });
-
   const msgInput = container.querySelector('#msg-input');
   msgInput.addEventListener('keypress', (e) => {
     if (e.key === 'Enter') {
@@ -119,6 +142,9 @@ export function ChatWindow(conversation) {
   sendBtn.addEventListener('click', sendMessage);
 
 
-  loadChatMessage(1);
+  if(conversationId){
+
+    loadChatMessage(conversationId);
+  }
   return container;
 }

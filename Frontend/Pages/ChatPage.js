@@ -8,8 +8,9 @@ export function ChatPage(navigate){
 
     let selectedConversation  = null;
     const sidebar = Sidebar({
-        onSelectedUser:(conversation)=>{
+        onSelectedUser:(conversation,id)=>{
             selectedConversation = conversation;
+            selectedRecieverId = id;
             renderChatWindow();
         }
     });
@@ -29,7 +30,7 @@ export function ChatPage(navigate){
              `;
              return;
         }
-        const chatwindow = ChatWindow(selectedConversation);
+        const chatwindow = ChatWindow(selectedConversation,selectedRecieverId);
 
         chatContainer.appendChild(chatwindow);
     }

@@ -86,7 +86,7 @@ export function Sidebar({onSelectedUser}){
                 li.classList.remove('active');
             });
             singleUser.classList.add('active');
-            onSelectedUser(user);
+            onSelectedUser(user.conversationId,user.id);
         });
         conversationList.appendChild(singleUser);
     }

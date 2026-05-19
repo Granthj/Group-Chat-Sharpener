@@ -3,6 +3,7 @@ const Router = express.Router();
 const loginController = require('../Controller/loginController');
 const signUpController = require('../Controller/signUpController');
 const getChat = require('../Controller/chatMessageGetController');
+const sidebarAllUsers = require('../Controller/sidebarAllUsers');
 
 Router.post('/api/login', loginController.login);
 Router.post('/api/signup', signUpController.signup);
@@ -10,5 +11,7 @@ Router.post('/api/signup', signUpController.signup);
 // For chats
 
 Router.get('/api/message/:conversationId',getChat);
+Router.get('/api/get-all-users',sidebarAllUsers);
+
 
 module.exports = Router;

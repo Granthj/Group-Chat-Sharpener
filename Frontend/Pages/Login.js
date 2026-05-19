@@ -54,6 +54,7 @@ export function Login(navigate) {
             });
             
             if(res.data.success){
+                localStorage.setItem('token',res.data.token);
                 alert('Login successfully');
                 navigate('/dashboard');
             }

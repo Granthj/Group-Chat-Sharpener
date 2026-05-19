@@ -7,7 +7,7 @@ const Message = require('../Model/messageSchema');
 const getAllUsers = async(req,res)=>{
 
     try{
-        let currentUserId = req.user.id;
+        let currentUserId = req.userId;
         const users = await User.findAll({
             where:{
                 id:{
@@ -25,10 +25,10 @@ const getAllUsers = async(req,res)=>{
             }
         });
         const conversationIds = myConversation.map(con=>{
-            return con = con.coversationId
+            return con = con.conversationId
         });
         const sidebarUsers = [];
-        for(const user in users){
+        for(const user of users){
 
 
             const sharedConversation = await ConversationParticipants.findOne({  //lookup table comparing userID and conversationID both together
@@ -44,6 +44,7 @@ const getAllUsers = async(req,res)=>{
                 sidebarUsers.push({
                     id:user.id,
                     name:user.name,
+                    conversationId:null,
                     lastMessage:null,
                     lastMessageAt:null
                 });
@@ -60,6 +61,7 @@ const getAllUsers = async(req,res)=>{
             sidebarUsers.push({
                 id:user.id,
                 name:user.name,
+                conversationId:conversation.id,
                 lastMessage:lastMessage ? lastMessage.text : null,  // othere fields are there as well so we need to filter by .text
                 lastMessageAt:conversation.lastMessageAt
             });

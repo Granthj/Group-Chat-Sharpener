@@ -14,12 +14,16 @@ const Auth = async (req,res,next)=>{
         const decode = jwt.verify(token,'chat-user');
 
         if(!decode){
-            req.user = null;
+            req.userId = null;
+            req.username = null;
+            req.useremail = null;
             req.auth = false;
             return;
         }
         else{
-            req.user = decode.userId;
+            req.userId = decode.user.userId;
+            req.username = decode.user.username;
+            req.useremail = decode.user.useremail;
             req.auth = true;
             next();
         }

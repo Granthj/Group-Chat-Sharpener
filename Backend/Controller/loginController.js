@@ -1,6 +1,15 @@
 const User = require('../Model/signupSchema');
 const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
 
+const generateToken = (user)=>{
+    const token = jwt.sign({
+        data:user
+    },
+    'chat-user',{expiresIn:'1h'}
+    );
+    return token;
+}
 const login = async (req, res) => {
     try {
         const { username, password } = req.body;
@@ -36,7 +45,13 @@ const login = async (req, res) => {
                 success:false, 
             });
         }
-        res.status(200).json({ message: 'Login successful', success:true});
+        const newUser = {
+            userId:userId,
+            username:user.name,
+            useremail:user.email
+        }
+        const token = generateToken(newUser);
+        res.status(200).json({ message: 'Login successful', success:true,token:token});
     }
     catch (err) {
         console.log(err);
