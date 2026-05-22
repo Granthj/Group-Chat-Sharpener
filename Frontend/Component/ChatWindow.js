@@ -34,7 +34,7 @@ export function ChatWindow(conversation,id) {
   const currentUserId = Number(localStorage.getItem('userId'));
   let conversationId = conversation;
   let receiverId = id;
-
+  
   async function loadChatMessage(conversationId) {
 
     try {
@@ -92,6 +92,9 @@ export function ChatWindow(conversation,id) {
     msgContainer.appendChild(msgDiv);
     msgContainer.scrollTop = msgContainer.scrollHeight;
   }
+  if(conversationId){
+    socket.emit('join-room',conversationId);
+  }
   function sendMessage() {
 
     const msgInput = container.querySelector('#msg-input');
@@ -103,7 +106,8 @@ export function ChatWindow(conversation,id) {
 
     if(conversationId){
       socket.emit('sendMessage', {
-  
+        
+        type:'conversation',
         conversationId,
         senderId: currentUserId,
         text,
@@ -114,6 +118,7 @@ export function ChatWindow(conversation,id) {
     else{
       socket.emit('sendMessage',{
 
+        type:'receiver',
         receiverId,
         senderId: currentUserId,
         text,
@@ -126,7 +131,7 @@ export function ChatWindow(conversation,id) {
   socket.on('receiveMessage', (msg) => {
     if(!conversationId){
       conversationId = msg.conversationId;
-      socket.emit('joinConversation',conversationId);
+      socket.emit('join-room',conversationId);
     }
     if(conversationId === msg.conversationId){
       addMessage(msg);

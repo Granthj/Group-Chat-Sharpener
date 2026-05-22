@@ -7,7 +7,7 @@ module.exports = (io)=>{
             const token = socket.handshake.auth.token;
     
             if(!token){
-                next(new Error('Token is missing in socket handshake'));
+                return next(new Error('Token is missing in socket handshake'));
             }
     
             const decode = jwt.verify(token,'chat-userId');
