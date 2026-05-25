@@ -50,7 +50,7 @@ export function CreateGroup(usersIdArr){
               if(!formValue){
                 return;
             }
-            const res = await axios.post(`${API_URL}`,{
+            const res = await axios.post(`${API_URL}/post-group`,{
                 groupName:formValue,
                 users:objArr
             });

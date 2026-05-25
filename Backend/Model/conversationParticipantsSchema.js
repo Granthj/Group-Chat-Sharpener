@@ -15,6 +15,10 @@ const ConversationParticipants = db.define('ConversationParticipants',{
     userId:{
         type:DataTypes.INTEGER,
         allowNull:false
+    },
+    isAdmin:{
+        type:DataTypes.BOOLEAN,
+        defaultValue:false
     }
 },{
     timestamps:true,

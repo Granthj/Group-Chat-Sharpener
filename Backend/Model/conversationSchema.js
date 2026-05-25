@@ -12,6 +12,10 @@ const Conversation = db.define('Conversation',{
         type:DataTypes.BOOLEAN,
         default:false,
     },
+    groupName:{
+        type:DataTypes.STRING,
+        allowNull:true
+    },
     lastMessageId:{
         type:DataTypes.INTEGER
 

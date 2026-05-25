@@ -4,6 +4,7 @@ const loginController = require('../Controller/loginController');
 const signUpController = require('../Controller/signUpController');
 const getChat = require('../Controller/chatMessageGetController');
 const sidebarAllUsers = require('../Controller/sidebarAllUsers');
+const groupChatController = require('../Controller/groupChartController');
 
 Router.post('/api/login', loginController.login);
 Router.post('/api/signup', signUpController.signup);
@@ -12,6 +13,7 @@ Router.post('/api/signup', signUpController.signup);
 
 Router.get('/api/message/:conversationId',getChat);
 Router.get('/api/get-all-users',sidebarAllUsers);
+Router.post('/api/post-group',groupChatController.postGroupChat);
 
 
 module.exports = Router;
