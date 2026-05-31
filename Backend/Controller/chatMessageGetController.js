@@ -5,7 +5,7 @@ const ConversationParticipants = require('../Model/conversationParticipantsSchem
 const getChat = async (req,res)=>{
 
     try{
-        const conversationId = req.param.conversationId;
+        const conversationId = req.params.conversationId;
 
         const message = await Message.findAll({
             where:{

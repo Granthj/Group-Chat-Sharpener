@@ -24,10 +24,11 @@ export function Sidebar({ onSelectedUser }) {
             
             <div class="conversation-list"></div>
             `;
-            
+
     let addSubmitBtn;
     let isGroup = false;
     let selectedUserIdArr = [];
+    let groupArr = [];
     let users = [];
     async function loadUser() {
 
@@ -35,7 +36,7 @@ export function Sidebar({ onSelectedUser }) {
             const response = await axios.get(`${API_URL}/get-all-users`);
 
             users = response.data.users;
-            
+            groupArr = response.data.group
 
             renderAllUsers();
             // response.data.users.forEach(user => {
@@ -43,7 +44,7 @@ export function Sidebar({ onSelectedUser }) {
             // })
         }
         catch (err) {
-            if (!err.response.data || !err.response) {
+            if (!err.response || !err.response.data) {
                 const sidebarTitle = container.querySelector('.sidebar-title');
                 const no_user = document.createElement('p');
                 no_user.textContent = 'No user';
@@ -52,36 +53,40 @@ export function Sidebar({ onSelectedUser }) {
             }
         }
     }
-    function renderAllUsers(userList = users){
+    function renderAllUsers(userList = users) {
         const conversationList = container.querySelector('.conversation-list');
         conversationList.innerHTML = '';
-        
-        userList.forEach(user=>{
+
+        userList.forEach(user => {
             renderUser(user);
-        })
+        });
+        groupArr.forEach(grp => {
+            renderGroup(grp);
+        });
     }
     const btnGroup = container.querySelector('#btnGroup');
     btnGroup.addEventListener('click', () => {
         isGroup = !isGroup;
 
-        if(!isGroup){
+        if (!isGroup) {
             selectedUserIdArr = [];
         }
         renderAllUsers();
     });
-    function renderCreateGroup(){
+    function renderCreateGroup() {
 
         const groupDiv = container.querySelector('#groupDiv');
         const oldCreateBtn = container.querySelector('#createGrpBtn');
-        if(oldCreateBtn){
+        if (oldCreateBtn) {
             oldCreateBtn.remove();
         }
-        if(selectedUserIdArr.length > 0){
+        if (selectedUserIdArr.length > 0) {
             addSubmitBtn = document.createElement('button');
             addSubmitBtn.id = 'createGrpBtn';
-            addSubmitBtn.text = 'Create Group';
-            addSubmitBtn.addEventListener('click',()=>{
-                CreateGroup(selectedUserIdArr);
+            addSubmitBtn.textContent = 'Create Group';
+            addSubmitBtn.addEventListener('click', () => {
+                const modal = CreateGroup(selectedUserIdArr);
+                document.body.appendChild(modal);
             });
         }
         groupDiv.appendChild(addSubmitBtn);
@@ -92,7 +97,6 @@ export function Sidebar({ onSelectedUser }) {
         const singleUser = document.createElement('div');
 
         singleUser.className = 'conversation-item';
-
 
         singleUser.innerHTML = `
         
@@ -107,13 +111,13 @@ export function Sidebar({ onSelectedUser }) {
         <h4>${user.name}</h4>
         
         <span class="time">
-        ${user.time}
+        ${user.lastMessageAt || ''}
         </span>
         
         </div>
         
         <p class="last-message">
-        ${user.lastMessage}
+        ${user.lastMessage || ''}
         </p>
         </div>
         
@@ -128,7 +132,7 @@ export function Sidebar({ onSelectedUser }) {
         else {
             checkBox.style.display = 'none';
         }
-        if(selectedUserIdArr.includes(user.id)){
+        if (selectedUserIdArr.includes(user.id)) {
             checkBox.checked = true;
         }
         checkBox.addEventListener('change', (e) => {
@@ -143,7 +147,7 @@ export function Sidebar({ onSelectedUser }) {
                 renderCreateGroup();
             }
         });
-    
+
         singleUser.appendChild(checkBox);
         singleUser.addEventListener('click', () => {
             if (isGroup) {
@@ -153,9 +157,43 @@ export function Sidebar({ onSelectedUser }) {
                 li.classList.remove('active');
             });
             singleUser.classList.add('active');
-            onSelectedUser(user.conversationId, user.id);
+            onSelectedUser(user.conversationId, user.id,false);
         });
         conversationList.appendChild(singleUser);
+    }
+    function renderGroup(group) {
+        const conversationList = container.querySelector('.conversation-list');
+        const singleGroup = document.createElement('div');
+
+        singleGroup.className = 'conversation-item';
+
+        singleGroup.innerHTML = `
+        <div class="avatar">
+            ${group.groupName.charAt(0).toUpperCase()}
+        </div>
+
+        <div class="conversation-content">
+
+            <div class="conversation-header">
+
+                <h4>${group.groupName}</h4>
+
+            </div>
+
+            <p class="last-message">
+                ${group.lastMessage || ''}
+            </p>
+
+        </div>
+        `;
+        singleGroup.addEventListener('click',()=>{
+            document.querySelectorAll('.conversation-item').forEach(li=>{
+                li.classList.remove('active');
+            });
+            singleGroup.classList.add('active');
+            onSelectedUser(group.conversationId,null,true);
+        });
+        conversationList.appendChild(singleGroup);
     }
 
     const noUserFoundDiv = document.createElement('div');

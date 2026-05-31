@@ -65,9 +65,38 @@ const getAllUsers = async(req,res)=>{
                 lastMessage:lastMessage ? lastMessage.text : null,  // othere fields are there as well so we need to filter by .text
                 lastMessageAt:conversation.lastMessageAt
             });
-
+            
         }
-        return res.status(200).json(sidebarUsers);
+        const groupConversation = await Conversation.findAll({
+            where:{
+                isGroup:true
+            },
+            include:[
+                {
+                    model:ConversationParticipants,
+                    where:{
+                        userId:currentUserId
+                    }
+                }
+            ]
+        });
+        const sidebarGroups = [];
+        for(const group of groupConversation){
+
+            let lastMessage = null;
+            if(group.lastMessageId){
+                lastMessage = await Message.findByPk(group.lastMessageId);
+
+                sidebarGroups.push({
+                    isGroup:true,
+                    groupName:group.groupName,
+                    conversationId:group.conversationId,
+                    lastMessage:lastMessage?lastMessage.text:null,
+                    lastMessageAt:group.lastMessageAt
+                })
+            }
+        }
+        return res.status(200).json({users:sidebarUsers,group:groupConversation});
     }
     catch(err){
         console.log(err);

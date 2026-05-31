@@ -7,10 +7,12 @@ export function ChatPage(navigate){
     container.className = 'chat-page';
 
     let selectedConversation  = null;
+    let isGroupTrue = false;
     const sidebar = Sidebar({
         onSelectedUser:(conversation,id)=>{
             selectedConversation = conversation;
             selectedRecieverId = id;
+            isGroupTrue = isGroup;
             renderChatWindow();
         }
     });
@@ -30,7 +32,7 @@ export function ChatPage(navigate){
              `;
              return;
         }
-        const chatwindow = ChatWindow(selectedConversation,selectedRecieverId);
+        const chatwindow = ChatWindow(selectedConversation,selectedRecieverId,isGroupTrue);
 
         chatContainer.appendChild(chatwindow);
     }

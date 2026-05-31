@@ -1,12 +1,12 @@
 import { API_URL } from '../Src/Config.js';
 import { io } from 'socket.io-client';
-const socket = io(API_URL,{
-  auth:{
-    token:localStorage.getItem('token')
+const socket = io(API_URL, {
+  auth: {
+    token: localStorage.getItem('token')
   }
 });
 
-export function ChatWindow(conversation,id) {
+export function ChatWindow(conversation, id,isGroup) {
 
   const container = document.createElement('div');
   container.innerHTML = `
@@ -34,7 +34,7 @@ export function ChatWindow(conversation,id) {
   const currentUserId = Number(localStorage.getItem('userId'));
   let conversationId = conversation;
   let receiverId = id;
-  
+
   async function loadChatMessage(conversationId) {
 
     try {
@@ -92,8 +92,11 @@ export function ChatWindow(conversation,id) {
     msgContainer.appendChild(msgDiv);
     msgContainer.scrollTop = msgContainer.scrollHeight;
   }
-  if(conversationId){
-    socket.emit('join-room',conversationId);
+  if(isGroup && conversationId) {
+    socket.emit('join-group-room', conversationId);
+  }
+  else if(conversationId) {
+    socket.emit('join-room', conversationId);
   }
   function sendMessage() {
 
@@ -103,22 +106,32 @@ export function ChatWindow(conversation,id) {
     if (!text) {
       return;
     }
+    if(isGroup){
 
-    if(conversationId){
-      socket.emit('sendMessage', {
-        
-        type:'conversation',
+      socket.emit('sendGroup-message', {
+
         conversationId,
         senderId: currentUserId,
         text,
         createdAt: new Date()
-  
+
       });
     }
-    else{
-      socket.emit('sendMessage',{
+    else if(conversationId) {
+      socket.emit('sendMessage', {
 
-        type:'receiver',
+        type: 'conversation',
+        conversationId,
+        senderId: currentUserId,
+        text,
+        createdAt: new Date()
+
+      });
+    }
+    else {
+      socket.emit('sendMessage', {
+
+        type: 'receiver',
         receiverId,
         senderId: currentUserId,
         text,
@@ -129,11 +142,23 @@ export function ChatWindow(conversation,id) {
   }
   socket.off('receiveMessage');
   socket.on('receiveMessage', (msg) => {
-    if(!conversationId){
+    if(isGroup) return;
+
+    if (!conversationId) {
       conversationId = msg.conversationId;
-      socket.emit('join-room',conversationId);
+      socket.emit('join-room', conversationId);
     }
-    if(conversationId === msg.conversationId){
+    if (conversationId === msg.conversationId) {
+      addMessage(msg);
+    }
+  });
+  socket.off('receiveGroup-message');
+
+  socket.on('receiveGroup-message', (msg) => {
+
+    if(!isGroup) return;
+    if (conversationId === msg.conversationId) {
+
       addMessage(msg);
     }
   });
@@ -147,7 +172,7 @@ export function ChatWindow(conversation,id) {
   sendBtn.addEventListener('click', sendMessage);
 
 
-  if(conversationId){
+  if (conversationId) {
 
     loadChatMessage(conversationId);
   }
