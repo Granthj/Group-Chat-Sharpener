@@ -52,12 +52,13 @@ export function Login(navigate) {
                 username,
                 password
             });
-            
+            // console.log(res);
             if(res.data.success){
                 localStorage.setItem('token',res.data.token);
                 localStorage.setItem('userId',res.data.userId);
+                localStorage.setItem('username',res.data.username);
                 alert('Login successfully');
-                navigate('/dashboard');
+                navigate('/chat');
             }
             
         }

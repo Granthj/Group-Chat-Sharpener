@@ -4,17 +4,17 @@ import {Login} from './Pages/Login.js';
 import { ChatPage } from './Pages/ChatPage.js';
 
 const app = document.getElementById('app');
-app.innerHTML = "";
 console.log('working');
 function render(route){
-
+    
+    app.innerHTML = "";
     switch(route){
         case "/login":
             app.appendChild(Login(navigate));
-            console.log('working login');
             break;
-        case "/signup":
-            app.appendChild(Signup(navigate));
+            case "/signup":
+                app.appendChild(Signup(navigate));
+                console.log('working signup');
             break;
         case "/chat":
             app.appendChild(ChatPage(navigate));

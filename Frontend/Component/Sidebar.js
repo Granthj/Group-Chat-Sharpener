@@ -1,14 +1,14 @@
 import { API_URL } from '../Src/Config.js';
 import { CreateGroup } from './CreateGroup.js';
 export function Sidebar({ onSelectedUser }) {
-
+    const username  = localStorage.getItem('username');
     const container = document.createElement('div');
     container.className = 'sidebar';
     container.innerHTML = `
     
          <div class="sidebar-top">
 
-            <h2 class="sidebar-title">Chats</h2>
+            <h2 class="sidebar-title">Welcome ${username} your chats</h2>
 
             <div class="search-box">
                 <input 
@@ -33,10 +33,16 @@ export function Sidebar({ onSelectedUser }) {
     async function loadUser() {
 
         try {
-            const response = await axios.get(`${API_URL}/get-all-users`);
+            const token = localStorage.getItem('token');
+            const response = await axios.get(`${API_URL}/get-all-users`,{
+                headers:{
+                    Authorization: `Bearer ${token}`
+                }
+            });
 
             users = response.data.users;
             groupArr = response.data.group
+            console.log(response.data.group,'groupArr from sidebar');
 
             renderAllUsers();
             // response.data.users.forEach(user => {
@@ -61,6 +67,7 @@ export function Sidebar({ onSelectedUser }) {
             renderUser(user);
         });
         groupArr.forEach(grp => {
+            // console.log(grp,'rendering group in sidebar');
             renderGroup(grp);
         });
     }
@@ -92,7 +99,6 @@ export function Sidebar({ onSelectedUser }) {
         groupDiv.appendChild(addSubmitBtn);
     }
     function renderUser(user) {
-
         const conversationList = container.querySelector('.conversation-list');
         const singleUser = document.createElement('div');
 
@@ -157,7 +163,7 @@ export function Sidebar({ onSelectedUser }) {
                 li.classList.remove('active');
             });
             singleUser.classList.add('active');
-            onSelectedUser(user.conversationId, user.id,false);
+            onSelectedUser(user.conversationId, user.id,false,user.name);
         });
         conversationList.appendChild(singleUser);
     }
@@ -191,7 +197,8 @@ export function Sidebar({ onSelectedUser }) {
                 li.classList.remove('active');
             });
             singleGroup.classList.add('active');
-            onSelectedUser(group.conversationId,null,true);
+            // console.log(group.conversationId,'sidebar group id');
+            onSelectedUser(group.conversationId,null,true,group.groupName);
         });
         conversationList.appendChild(singleGroup);
     }

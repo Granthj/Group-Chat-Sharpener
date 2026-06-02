@@ -2,17 +2,21 @@ import {Sidebar} from '../Component/Sidebar.js';
 import {ChatWindow} from '../Component/ChatWindow.js';
 
 export function ChatPage(navigate){
-
+    
     const container = document.createElement('div');
     container.className = 'chat-page';
 
     let selectedConversation  = null;
+    let selectedRecieverId = null;
     let isGroupTrue = false;
+    let selectedName = null;
     const sidebar = Sidebar({
-        onSelectedUser:(conversation,id)=>{
+        onSelectedUser:(conversation,id,isGroup,name)=>{
+            // console.log('selected', conversation, id, isGroup,name);
             selectedConversation = conversation;
             selectedRecieverId = id;
             isGroupTrue = isGroup;
+            selectedName = name
             renderChatWindow();
         }
     });
@@ -24,7 +28,7 @@ export function ChatPage(navigate){
 
         chatContainer.innerHTML = '';
 
-        if(!selectedConversation){
+        if(selectedConversation === null && selectedRecieverId === null){
             chatContainer.innerHTML = `
                 <div class="empty-chat">
                     Select a conversation
@@ -32,7 +36,7 @@ export function ChatPage(navigate){
              `;
              return;
         }
-        const chatwindow = ChatWindow(selectedConversation,selectedRecieverId,isGroupTrue);
+        const chatwindow = ChatWindow(selectedConversation,selectedRecieverId,isGroupTrue,selectedName);
 
         chatContainer.appendChild(chatwindow);
     }

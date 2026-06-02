@@ -9,7 +9,7 @@ const saveGroupMessages = async({text,conversationId,senderId})=>{
         const message = await Message.create({
             text,
             conversationId,
-            senderId
+            senderId,
         });
         const conversation = await Conversation.update({
             lastMessageId:message.id,

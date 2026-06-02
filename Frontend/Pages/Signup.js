@@ -42,14 +42,18 @@ export function Signup(navigate){
             const phone = e.target.phone.value;
             const password = e.target.password.value;
 
+            console.log(name,email,phone,password);
             const res = await axios.post(`${API_URL}/signup`,{
                 name,
                 email,
                 phone,
                 password
             });
-
-            navigate('/login');
+            // console.log(res.config.data);
+            if(res.status === 201){
+                navigate('/login');
+               
+            }
         }
         catch(err){
 
@@ -65,7 +69,7 @@ export function Signup(navigate){
                 document.querySelectorAll('.alert').forEach(element=>element.remove());
 
                 if(errors.email){
-                    const p = document.createElement('p');
+                    const p = container.createElement('p');
                     p.className = 'alert';
                     p.textContent = err.response.data.errors.email;
                     inputEmail.insertAdjacentElement('afterend', p);

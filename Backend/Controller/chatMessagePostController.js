@@ -5,67 +5,104 @@ const ConversationParticipants = require('../Model/conversationParticipantsSchem
 
 const chatMessage = async (req, res) => {
     try {
-        const { senderId, receiverId, text } = req.body;
+        const {
+            senderId,
+            receiverId,
+            text,
+            conversationId
+        } = req.body;
 
-        let conversations = await Conversation.findAll({
-            include: [
-                {
-                    model: ConversationParticipants,
-                    where: {
-                        userId:{
-                            [Op.in]:[senderId,receiverId]
-                        }
-                    }
-                }
-            ]
-
-        });
         let conversation = null;
 
-        for(const conv of conversations){
-            const participants = conv.ConversationParticipants.map(p=>p.userId);
-
-            if(participants.includes(senderId) && participants.includes(receiverId)){
-                conversation = conv;
-                break;
-            }
+        // Existing conversation provided
+        if (conversationId) {
+            conversation = await Conversation.findByPk(conversationId);
         }
+
+        // New personal chat
         if (!conversation) {
 
-            conversation = await Conversation.create({
-                isGroup: false
-            });
+            if (!receiverId) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'receiverId is required'
+                });
+            }
 
-            await ConversationParticipants.bulkCreate([
-                {
-                    conversationId: conversation.id,
-                    userId: senderId
-                },
-                {
-                    conversationId: conversation.id,
-                    userId: receiverId
-                }
-            ]);
+            // Get all conversations of sender
+            const senderConversations =
+                await ConversationParticipants.findAll({
+                    where: {
+                        userId: senderId
+                    }
+                });
+
+            const senderConversationIds =
+                senderConversations.map(
+                    item => item.conversationId
+                );
+
+            // Find a conversation shared by receiver
+            const sharedConversation =
+                await ConversationParticipants.findOne({
+                    where: {
+                        userId: receiverId,
+                        conversationId: {
+                            [Op.in]: senderConversationIds
+                        }
+                    }
+                });
+
+            if (sharedConversation) {
+
+                conversation = await Conversation.findByPk(
+                    sharedConversation.conversationId
+                );
+
+            } else {
+
+                conversation = await Conversation.create({
+                    isGroup: false
+                });
+
+                await ConversationParticipants.bulkCreate([
+                    {
+                        conversationId: conversation.id,
+                        userId: senderId
+                    },
+                    {
+                        conversationId: conversation.id,
+                        userId: receiverId
+                    }
+                ]);
+            }
         }
 
         const addMessage = await Message.create({
             conversationId: conversation.id,
-            senderId: senderId,
-            text: text
+            senderId,
+            text
         });
 
         await conversation.update({
             lastMessageId: addMessage.id,
             lastMessageAt: addMessage.createdAt
         });
-        res.status(200).json({message:addMessage,conversationId:conversation.id,success:true});
-    }
-    catch(err){
-        console.log(err);
-        res.status(500).json({message:'Some thing went wrong'});
-    }
 
-}
+        return res.status(200).json({
+            success: true,
+            conversationId: conversation.id,
+            message: addMessage
+        });
 
+    } catch (err) {
+        console.error(err);
+
+        return res.status(500).json({
+            success: false,
+            message: 'Something went wrong'
+        });
+    }
+};
 
 module.exports = chatMessage;

@@ -1,7 +1,7 @@
 const jwt = require('jsonwebtoken');
 
 const Auth = async (req,res,next)=>{
-
+    // console.log("auth middleware called");
     try{
 
         const header = req.header('Authorization');
@@ -10,9 +10,9 @@ const Auth = async (req,res,next)=>{
             return res.status(401).json({message:'No token found'});
         }
         const token = header.split(' ')[1];
-
+        // console.log(token,'token middleware');
         const decode = jwt.verify(token,'chat-user');
-
+        // console.log(decode,'decode middleware');
         if(!decode){
             req.userId = null;
             req.username = null;
@@ -21,9 +21,10 @@ const Auth = async (req,res,next)=>{
             return;
         }
         else{
-            req.userId = decode.user.userId;
-            req.username = decode.user.username;
-            req.useremail = decode.user.useremail;
+            req.userId = decode.data.userId;
+            // console.log(req.userId,"auth middleware");
+            req.username = decode.data.username;
+            req.useremail = decode.data.useremail;
             req.auth = true;
             next();
         }
@@ -32,3 +33,5 @@ const Auth = async (req,res,next)=>{
         return res.status(401).json({message:"Token is wrong"});
     }
 }
+
+module.exports = Auth;

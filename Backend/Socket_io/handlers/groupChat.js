@@ -2,9 +2,12 @@ const saveGroupMessages = require('../../Controller/groupChatMessageController')
 
 module.exports = (socket,io)=>{
 
-    socket.on("sendGroup-message",(data)=>{
-        
+    socket.on("join-group-room", (conversationId)=>{
+        socket.join(`group-room_${conversationId}`);
+    });
+    socket.on("sendGroup-message",async (data)=>{
         try{
+            // console.log('group message received on server',data);
             const savedMessage = await saveGroupMessages({
                 text:data.text,
                 conversationId:data.conversationId,
@@ -14,8 +17,9 @@ module.exports = (socket,io)=>{
 
             io.to(room).emit("receiveGroup-message",{
                 id:savedMessage.id,
-                conversationId:savedMessage.id,
+                conversationId:data.conversationId,
                 senderId:savedMessage.senderId,
+                senderName:data.senderName,
                 text:savedMessage.text,
                 createdAt:savedMessage.createdAt
             });

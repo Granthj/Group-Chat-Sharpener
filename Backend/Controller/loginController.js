@@ -46,12 +46,13 @@ const login = async (req, res) => {
             });
         }
         const newUser = {
-            userId:userId,
-            username:user.name,
+            userId:user.id,
+            name:user.name,
             useremail:user.email
         }
+        // console.log(newUser.name,'nananan')
         const token = generateToken(newUser);
-        res.status(200).json({ message: 'Login successful', success:true,token:token,userId:newUser.userId});
+        res.status(200).json({ message: 'Login successful', success:true,token:token,userId:newUser.userId,username:newUser.name });
     }
     catch (err) {
         console.log(err);

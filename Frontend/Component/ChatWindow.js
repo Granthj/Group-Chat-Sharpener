@@ -1,21 +1,26 @@
 import { API_URL } from '../Src/Config.js';
-import { io } from 'socket.io-client';
-const socket = io(API_URL, {
+// import { io } from 'socket.io-client';
+const socket = io('http://localhost:5000', {
   auth: {
     token: localStorage.getItem('token')
   }
 });
 
-export function ChatWindow(conversation, id,isGroup) {
+// socket.on('connect', () => {
+// });
 
+socket.on('connect_error', (err) => {
+    console.error('Socket connection error:', err.message);
+});
+export function ChatWindow(conversation, id,isGroup,name) {
   const container = document.createElement('div');
   container.innerHTML = `
       <div class="chat-box">
 
       <div class="chat-header">
-        <div class="avatar"></div>
+        <div class="avatar">${name ? name.charAt(0).toUpperCase() : ''}</div>
         <div class="header-text">
-          <h3></h3>
+          <h3>${name || ''}</h3>
           <p></p>
         </div>
       </div>
@@ -34,11 +39,11 @@ export function ChatWindow(conversation, id,isGroup) {
   const currentUserId = Number(localStorage.getItem('userId'));
   let conversationId = conversation;
   let receiverId = id;
+  // console.log(conversationId,'group id');
 
   async function loadChatMessage(conversationId) {
 
     try {
-
       const response = await axios.get(`${API_URL}/message/${conversationId}`);
 
       const msgContainer = container.querySelector('#messages');
@@ -77,6 +82,7 @@ export function ChatWindow(conversation, id,isGroup) {
     // msgContainer.innerHTML = '';
     const msgDiv = document.createElement('div');
 
+    const name = localStorage.getItem('username');
 
     if (msg.senderId === currentUserId) {
       msgDiv.className = 'message sent'
@@ -84,11 +90,21 @@ export function ChatWindow(conversation, id,isGroup) {
     else {
       msgDiv.className = 'message received'
     }
-
-    msgDiv.innerHTML = `
-          <p>${msg.text}</p>
-          <div class="time">${new Date(msg.createdAt).toLocaleTimeString()}</div>
-        `
+    if(isGroup){
+      const senderName = msg.Signup?.name || msg.senderName;
+      // console.log(msg.senderName,'sender name in chat window');
+      msgDiv.innerHTML = `
+            <strong>${msg.senderName === name ? 'You' : msg.senderName}</strong>
+            <p>${msg.text}</p>
+            <div class="time">${new Date(msg.createdAt).toLocaleTimeString()}</div>
+          `
+    }
+    else{
+      msgDiv.innerHTML = `
+            <p>${msg.text}</p>
+            <div class="time">${new Date(msg.createdAt).toLocaleTimeString()}</div>
+          `
+    }
     msgContainer.appendChild(msgDiv);
     msgContainer.scrollTop = msgContainer.scrollHeight;
   }
@@ -99,33 +115,34 @@ export function ChatWindow(conversation, id,isGroup) {
     socket.emit('join-room', conversationId);
   }
   function sendMessage() {
-
     const msgInput = container.querySelector('#msg-input');
     const text = msgInput.value.trim();
-
+    
     if (!text) {
       return;
     }
     if(isGroup){
-
+      const name = localStorage.getItem('username');
       socket.emit('sendGroup-message', {
-
+        
         conversationId,
         senderId: currentUserId,
+        senderName: name,
         text,
         createdAt: new Date()
-
+        
       });
+      // console.log('sending group message',text);
     }
     else if(conversationId) {
       socket.emit('sendMessage', {
-
+        
         type: 'conversation',
         conversationId,
         senderId: currentUserId,
         text,
         createdAt: new Date()
-
+        
       });
     }
     else {
@@ -149,16 +166,17 @@ export function ChatWindow(conversation, id,isGroup) {
       socket.emit('join-room', conversationId);
     }
     if (conversationId === msg.conversationId) {
+      // console.log('new message', msg);
       addMessage(msg);
     }
   });
   socket.off('receiveGroup-message');
 
   socket.on('receiveGroup-message', (msg) => {
+    console.log('new group message', msg);
 
     if(!isGroup) return;
     if (conversationId === msg.conversationId) {
-
       addMessage(msg);
     }
   });

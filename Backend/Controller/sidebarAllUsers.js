@@ -8,6 +8,7 @@ const getAllUsers = async(req,res)=>{
 
     try{
         let currentUserId = req.userId;
+        console.log(currentUserId);
         const users = await User.findAll({
             where:{
                 id:{
@@ -84,19 +85,19 @@ const getAllUsers = async(req,res)=>{
         for(const group of groupConversation){
 
             let lastMessage = null;
-            if(group.lastMessageId){
+            // if(group.lastMessageId){
                 lastMessage = await Message.findByPk(group.lastMessageId);
-
+                // console.log(group.conversationId,'group conversation id in sidebar');
                 sidebarGroups.push({
                     isGroup:true,
                     groupName:group.groupName,
-                    conversationId:group.conversationId,
+                    conversationId:group.id,
                     lastMessage:lastMessage?lastMessage.text:null,
                     lastMessageAt:group.lastMessageAt
                 })
-            }
+            // }
         }
-        return res.status(200).json({users:sidebarUsers,group:groupConversation});
+        return res.status(200).json({users:sidebarUsers,group:sidebarGroups});
     }
     catch(err){
         console.log(err);
