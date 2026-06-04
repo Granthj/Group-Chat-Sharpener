@@ -78,7 +78,43 @@
 /* =========================
    USER LIST
 ========================= */
+#groupDiv {
+    margin-top: 14px;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
 
+#btnGroup,
+#createGrpBtn {
+    border: none;
+    cursor: pointer;
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: 14px;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+
+/* Toggle Group Selection */
+#btnGroup {
+    background: #3b82f6;
+    color: #fff;
+}
+
+#btnGroup:hover {
+    background: #2563eb;
+}
+
+/* Create Group Button */
+#createGrpBtn {
+    background: #10b981;
+    color: #fff;
+}
+
+#createGrpBtn:hover {
+    background: #059669;
+}
 .conversation-list {
     flex: 1;
     overflow-y: auto;
@@ -100,7 +136,13 @@
     transition: background 0.2s ease;
     border-bottom: 1px solid #f3f4f6;
 }
-
+.conversation-item input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    accent-color: #3b82f6;
+    flex-shrink: 0;
+}
 .conversation-item:hover {
     background: #f9fafb;
 }
@@ -108,7 +150,9 @@
 .conversation-item.active {
     background: #e0edff;
 }
-
+.conversation-item:has(input[type="checkbox"]:checked) {
+    background: #dbeafe;
+}
 
 /* =========================
    AVATAR
@@ -211,5 +255,13 @@
 
     .conversation-list {
         max-height: 400px;
+    }
+        #groupDiv {
+        flex-direction: column;
+    }
+
+    #btnGroup,
+    #createGrpBtn {
+        width: 100%;
     }
 }

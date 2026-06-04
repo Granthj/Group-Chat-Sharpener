@@ -1,19 +1,30 @@
 import { API_URL } from "../Src/Config.js";
-export function CreateGroup(usersIdArr){
+export function CreateGroup(usersIdArr,loadUser){
 
     const container = document.createElement('div');
 
     container.innerHTML = `
 
-        <div>
-        <form>
-            <label for="groupname">Write your group name</label>
-            <input id="groupname" type="text" name="groupName" placeholder="Group name here"></input>
-            <button id="confirmBtn" type="submit">Confirm</button>
-            <button id="cancelBtn" type="button">Cancel</button>
+    <div class="group-modal-container">
+    <form>
+        <label for="groupname">Write your group name</label>
 
-        </form>
-        </div>
+        <input
+            id="groupname"
+            type="text"
+            name="groupName"
+            placeholder="Group name here"
+        >
+
+        <button id="confirmBtn" type="submit">
+            Confirm
+        </button>
+
+        <button id="cancelBtn" type="button">
+            Cancel
+        </button>
+    </form>
+</div>
 
     `;
     const form = container.querySelector('form');
@@ -56,6 +67,7 @@ export function CreateGroup(usersIdArr){
             });
 
             container.remove();
+            loadUser();
         }
         catch(err){
             console.log('something wrong',err);

@@ -1,17 +1,17 @@
-import {Sidebar} from '../Component/Sidebar.js';
-import {ChatWindow} from '../Component/ChatWindow.js';
+import { Sidebar } from '../Component/Sidebar.js';
+import { ChatWindow } from '../Component/ChatWindow.js';
 
-export function ChatPage(navigate){
-    
+export function ChatPage(navigate) {
+
     const container = document.createElement('div');
     container.className = 'chat-page';
 
-    let selectedConversation  = null;
+    let selectedConversation = null;
     let selectedRecieverId = null;
     let isGroupTrue = false;
     let selectedName = null;
     const sidebar = Sidebar({
-        onSelectedUser:(conversation,id,isGroup,name)=>{
+        onSelectedUser: (conversation, id, isGroup, name) => {
             // console.log('selected', conversation, id, isGroup,name);
             selectedConversation = conversation;
             selectedRecieverId = id;
@@ -24,20 +24,22 @@ export function ChatPage(navigate){
     const chatContainer = document.createElement('div');
     chatContainer.className = 'chat-container';
 
-    function renderChatWindow(){
+    function renderChatWindow() {
 
+        const prev = chatContainer.querySelector('[data-chat-window]');
+        if (prev && prev._cleanup) prev._cleanup();
         chatContainer.innerHTML = '';
 
-        if(selectedConversation === null && selectedRecieverId === null){
+        if (selectedConversation === null && selectedRecieverId === null) {
             chatContainer.innerHTML = `
                 <div class="empty-chat">
                     Select a conversation
                 </div>
              `;
-             return;
+            return;
         }
-        const chatwindow = ChatWindow(selectedConversation,selectedRecieverId,isGroupTrue,selectedName);
-
+        const chatwindow = ChatWindow(selectedConversation, selectedRecieverId, isGroupTrue, selectedName);
+        chatwindow.setAttribute('data-chat-window', 'true');
         chatContainer.appendChild(chatwindow);
     }
     renderChatWindow();

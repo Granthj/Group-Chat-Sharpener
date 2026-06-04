@@ -14,12 +14,10 @@ const chatMessage = async (req, res) => {
 
         let conversation = null;
 
-        // Existing conversation provided
         if (conversationId) {
             conversation = await Conversation.findByPk(conversationId);
         }
 
-        // New personal chat
         if (!conversation) {
 
             if (!receiverId) {
@@ -29,7 +27,6 @@ const chatMessage = async (req, res) => {
                 });
             }
 
-            // Get all conversations of sender
             const senderConversations =
                 await ConversationParticipants.findAll({
                     where: {
@@ -78,6 +75,16 @@ const chatMessage = async (req, res) => {
             }
         }
 
+        let resolvedReceiverId = receiverId;
+        if(!resolvedReceiverId) {
+            const participants = await ConversationParticipants.findAll({
+                where: {
+                    conversationId: conversation.id
+                }
+            });
+            const receiverParticipant = participants.find(p=>Number(p.userId) != Number(senderId));
+            resolvedReceiverId = receiverParticipant ? receiverParticipant.userId : null;
+        }
         const addMessage = await Message.create({
             conversationId: conversation.id,
             senderId,
@@ -92,7 +99,8 @@ const chatMessage = async (req, res) => {
         return res.status(200).json({
             success: true,
             conversationId: conversation.id,
-            message: addMessage
+            message: addMessage,
+            receiverId: resolvedReceiverId
         });
 
     } catch (err) {

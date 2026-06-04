@@ -3,6 +3,7 @@ const saveGroupMessages = require('../../Controller/groupChatMessageController')
 module.exports = (socket,io)=>{
 
     socket.on("join-group-room", (conversationId)=>{
+
         socket.join(`group-room_${conversationId}`);
     });
     socket.on("sendGroup-message",async (data)=>{
@@ -22,6 +23,10 @@ module.exports = (socket,io)=>{
                 senderName:data.senderName,
                 text:savedMessage.text,
                 createdAt:savedMessage.createdAt
+            });
+            io.to(room).emit("updateGroupSidebar",{
+                conversationId:data.conversationId,
+                text:data.text
             });
         }
         catch(err){

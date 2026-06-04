@@ -1,18 +1,15 @@
 import { API_URL } from '../Src/Config.js';
-// import { io } from 'socket.io-client';
-const socket = io('http://localhost:5000', {
-  auth: {
-    token: localStorage.getItem('token')
-  }
-});
-
-// socket.on('connect', () => {
+import socket from '../SocketIo_instance/socket.js';
+// const socket = io('http://localhost:5000', {
+//   auth: {
+//     token: localStorage.getItem('token')
+//   }
 // });
 
 socket.on('connect_error', (err) => {
-    console.error('Socket connection error:', err.message);
+  console.error('Socket connection error:', err.message);
 });
-export function ChatWindow(conversation, id,isGroup,name) {
+export function ChatWindow(conversation, id, isGroup, name) {
   const container = document.createElement('div');
   container.innerHTML = `
       <div class="chat-box">
@@ -39,13 +36,11 @@ export function ChatWindow(conversation, id,isGroup,name) {
   const currentUserId = Number(localStorage.getItem('userId'));
   let conversationId = conversation;
   let receiverId = id;
-  // console.log(conversationId,'group id');
 
   async function loadChatMessage(conversationId) {
 
     try {
       const response = await axios.get(`${API_URL}/message/${conversationId}`);
-
       const msgContainer = container.querySelector('#messages');
 
       msgContainer.innerHTML = '';
@@ -90,16 +85,15 @@ export function ChatWindow(conversation, id,isGroup,name) {
     else {
       msgDiv.className = 'message received'
     }
-    if(isGroup){
+    if (isGroup) {
       const senderName = msg.Signup?.name || msg.senderName;
-      // console.log(msg.senderName,'sender name in chat window');
       msgDiv.innerHTML = `
-            <strong>${msg.senderName === name ? 'You' : msg.senderName}</strong>
+            <strong>${senderName === name ? 'You' : senderName}</strong>
             <p>${msg.text}</p>
             <div class="time">${new Date(msg.createdAt).toLocaleTimeString()}</div>
           `
     }
-    else{
+    else {
       msgDiv.innerHTML = `
             <p>${msg.text}</p>
             <div class="time">${new Date(msg.createdAt).toLocaleTimeString()}</div>
@@ -108,41 +102,55 @@ export function ChatWindow(conversation, id,isGroup,name) {
     msgContainer.appendChild(msgDiv);
     msgContainer.scrollTop = msgContainer.scrollHeight;
   }
-  if(isGroup && conversationId) {
+  function handlePrivateMessage(msg) {
+    if (isGroup) return;
+    if (conversationId && Number(conversationId) === Number(msg.conversationId)) {
+      addMessage(msg);
+    }
+  }
+
+  function handleGroupMessage(msg) {
+    if (!isGroup) return;
+    if (Number(conversationId) === Number(msg.conversationId)) {
+      addMessage(msg);
+    }
+  }
+  if (isGroup && conversationId) {
+    console.log("joining group room", conversationId);
     socket.emit('join-group-room', conversationId);
   }
-  else if(conversationId) {
+  else if (conversationId) {
     socket.emit('join-room', conversationId);
   }
   function sendMessage() {
     const msgInput = container.querySelector('#msg-input');
     const text = msgInput.value.trim();
-    
+
     if (!text) {
       return;
     }
-    if(isGroup){
+    if (isGroup) {
       const name = localStorage.getItem('username');
       socket.emit('sendGroup-message', {
-        
+
         conversationId,
         senderId: currentUserId,
         senderName: name,
         text,
         createdAt: new Date()
-        
+
       });
-      // console.log('sending group message',text);
+
     }
-    else if(conversationId) {
+    else if (conversationId && !isGroup) {
       socket.emit('sendMessage', {
-        
+
         type: 'conversation',
         conversationId,
         senderId: currentUserId,
         text,
         createdAt: new Date()
-        
+
       });
     }
     else {
@@ -158,28 +166,11 @@ export function ChatWindow(conversation, id,isGroup,name) {
     msgInput.value = '';
   }
   socket.off('receiveMessage');
-  socket.on('receiveMessage', (msg) => {
-    if(isGroup) return;
-
-    if (!conversationId) {
-      conversationId = msg.conversationId;
-      socket.emit('join-room', conversationId);
-    }
-    if (conversationId === msg.conversationId) {
-      // console.log('new message', msg);
-      addMessage(msg);
-    }
-  });
   socket.off('receiveGroup-message');
 
-  socket.on('receiveGroup-message', (msg) => {
-    console.log('new group message', msg);
+  socket.on('receiveMessage', handlePrivateMessage);
+  socket.on('receiveGroup-message', handleGroupMessage);
 
-    if(!isGroup) return;
-    if (conversationId === msg.conversationId) {
-      addMessage(msg);
-    }
-  });
   const msgInput = container.querySelector('#msg-input');
   msgInput.addEventListener('keypress', (e) => {
     if (e.key === 'Enter') {
@@ -194,5 +185,9 @@ export function ChatWindow(conversation, id,isGroup,name) {
 
     loadChatMessage(conversationId);
   }
+  container._cleanup = () => {
+    socket.off('receiveMessage', handlePrivateMessage);
+    socket.off('receiveGroup-message', handleGroupMessage);
+  };
   return container;
 }

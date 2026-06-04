@@ -1,13 +1,23 @@
 
 const chatMessage = require('../../Controller/chatMessagePostController');
+const socketMap = new Map();
+
 module.exports = (socket, io) => {
-    console.log('New socket connection:', socket.id, 'User ID:', socket.user);
+
+    if (socket.user) {
+        socketMap.set(String(socket.user), socket.id);
+    }
+
+    socket.on('disconnect', () => {
+        socketMap.delete(String(socket.user));
+    });
+    // console.log('New socket connection:', socket.id, 'User ID:', socket.user);
     socket.on("join-room", async (conversationId) => {
-        console.log('Joining room:', conversationId);
+        // console.log('Joining room:', conversationId);
         socket.join(`conversation_${conversationId}`);
     });
     socket.on("sendMessage", async (data) => {
-        console.log('message received on server', data);
+        // console.log('message received on server', data);
         try {
             const req = {
                 body: {
@@ -59,6 +69,34 @@ module.exports = (socket, io) => {
                 createdAt: saveMessage.message.createdAt,
                 messageId: saveMessage.message.id
             });
+            // console.log('=== SIDEBAR UPDATE DEBUG ===');
+            // console.log('socketMap contents:', [...socketMap]);
+            // console.log('data.senderId:', data.senderId, typeof data.senderId);
+            // console.log('data.receiverId:', data.receiverId, typeof data.receiverId);
+            // console.log('sender lookup key:', String(data.senderId));
+            // console.log('receiver lookup key:', String(data.receiverId));
+            // console.log('senderSocketId found:', socketMap.get(String(data.senderId)));
+            // console.log('receiverSocketId found:', socketMap.get(String(data.receiverId)));
+
+            const receiverId = data.receiverId || saveMessage.receiverId;
+            const senderSocketId = socketMap.get(String(data.senderId));
+            const receiverSocketId = socketMap.get(String(receiverId));
+            if (senderSocketId) {
+                io.to(senderSocketId).emit('updateSidebar', {
+                    conversationId: convId,
+                    senderId: data.senderId,
+                    text: data.text
+                });
+                // console.log('updateSidebar emitted to sender:', senderSocketId);
+            }
+            if (receiverSocketId) {
+                io.to(receiverSocketId).emit('updateSidebar', {
+                    conversationId: convId,
+                    senderId: data.senderId,
+                    text: data.text
+                });
+                // console.log('updateSidebar emitted to receiver:', receiverSocketId);
+            }
         }
         catch (err) {
             console.error('sendMessage error:', err);

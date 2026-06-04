@@ -1,7 +1,15 @@
 import { API_URL } from '../Src/Config.js';
 import { CreateGroup } from './CreateGroup.js';
+import socket from '../SocketIo_instance/socket.js';
+
+socket.on('connect', () => {
+    console.log('SIDEBAR SOCKET', socket.id);
+});
+socket.onAny((event, ...args) => {
+    console.log('SIDEBAR EVENT:', event, args);
+});
 export function Sidebar({ onSelectedUser }) {
-    const username  = localStorage.getItem('username');
+    const username = localStorage.getItem('username');
     const container = document.createElement('div');
     container.className = 'sidebar';
     container.innerHTML = `
@@ -34,20 +42,16 @@ export function Sidebar({ onSelectedUser }) {
 
         try {
             const token = localStorage.getItem('token');
-            const response = await axios.get(`${API_URL}/get-all-users`,{
-                headers:{
+            const response = await axios.get(`${API_URL}/get-all-users`, {
+                headers: {
                     Authorization: `Bearer ${token}`
                 }
             });
 
             users = response.data.users;
-            groupArr = response.data.group
-            console.log(response.data.group,'groupArr from sidebar');
+            groupArr = response.data.group;
 
             renderAllUsers();
-            // response.data.users.forEach(user => {
-            //     renderUser(user);
-            // })
         }
         catch (err) {
             if (!err.response || !err.response.data) {
@@ -59,14 +63,15 @@ export function Sidebar({ onSelectedUser }) {
             }
         }
     }
-    function renderAllUsers(userList = users) {
+    function renderAllUsers(userList = users, groupList = groupArr) {
         const conversationList = container.querySelector('.conversation-list');
         conversationList.innerHTML = '';
 
         userList.forEach(user => {
             renderUser(user);
+            // console.log(user,'rendering user in sidebar');
         });
-        groupArr.forEach(grp => {
+        groupList.forEach(grp => {
             // console.log(grp,'rendering group in sidebar');
             renderGroup(grp);
         });
@@ -90,13 +95,19 @@ export function Sidebar({ onSelectedUser }) {
         if (selectedUserIdArr.length > 0) {
             addSubmitBtn = document.createElement('button');
             addSubmitBtn.id = 'createGrpBtn';
-            addSubmitBtn.textContent = 'Create Group';
+            addSubmitBtn.textContent = 'Confirm next';
             addSubmitBtn.addEventListener('click', () => {
-                const modal = CreateGroup(selectedUserIdArr);
+                const modal = CreateGroup(selectedUserIdArr, loadUser);
                 document.body.appendChild(modal);
             });
         }
+        else {
+            const modal = CreateGroup(selectedUserIdArr, loadUser);
+            addSubmitBtn.remove();
+            document.body.removeChild(modal);
+        }
         groupDiv.appendChild(addSubmitBtn);
+
     }
     function renderUser(user) {
         const conversationList = container.querySelector('.conversation-list');
@@ -163,7 +174,7 @@ export function Sidebar({ onSelectedUser }) {
                 li.classList.remove('active');
             });
             singleUser.classList.add('active');
-            onSelectedUser(user.conversationId, user.id,false,user.name);
+            onSelectedUser(user.conversationId, user.id, false, user.name);
         });
         conversationList.appendChild(singleUser);
     }
@@ -192,13 +203,13 @@ export function Sidebar({ onSelectedUser }) {
 
         </div>
         `;
-        singleGroup.addEventListener('click',()=>{
-            document.querySelectorAll('.conversation-item').forEach(li=>{
+        singleGroup.addEventListener('click', () => {
+            document.querySelectorAll('.conversation-item').forEach(li => {
                 li.classList.remove('active');
             });
             singleGroup.classList.add('active');
             // console.log(group.conversationId,'sidebar group id');
-            onSelectedUser(group.conversationId,null,true,group.groupName);
+            onSelectedUser(group.conversationId, null, true, group.groupName);
         });
         conversationList.appendChild(singleGroup);
     }
@@ -213,8 +224,8 @@ export function Sidebar({ onSelectedUser }) {
     const searchInput = container.querySelector('#search-user');
     searchInput.addEventListener('input', (e) => {
 
-        if (users.length === 0) return;
-        const user = e.target.value.toLowerCase().trim();
+        if (users.length === 0 || groupArr.length === 0) return;
+        const listName = e.target.value.toLowerCase().trim();
 
         const conversationList = container.querySelector('.conversation-list');
         conversationList.innerHTML = '';
@@ -223,7 +234,7 @@ export function Sidebar({ onSelectedUser }) {
             noUserFoundDiv.remove();
         }
 
-        if (user === '') {
+        if (listName === '') {
             // users.forEach(li => {
             //     renderUser(li);
             // });
@@ -231,9 +242,12 @@ export function Sidebar({ onSelectedUser }) {
             return;
         }
         const filterUser = users.filter(item => {
-            return item.name.toLowerCase().includes(user);
+            return item.name.toLowerCase().includes(listName);
         });
-        if (filterUser.length === 0) {
+        const filterGroup = groupArr.filter(item => {
+            return item.groupName.toLowerCase().includes(listName);
+        });
+        if (filterUser.length === 0 && filterGroup.length === 0) {
 
 
             searchBox.appendChild(noUserFoundDiv);
@@ -241,12 +255,43 @@ export function Sidebar({ onSelectedUser }) {
             return;
         }
 
-        // filterUser.forEach(li => {
-        //     renderUser(li);
-        // });
-        renderAllUsers(filterUser);
+        renderAllUsers(filterUser, filterGroup);
     });
+    // socket.off('updateSidebar');
+    // socket.off('receiveGroup-message');
+    socket.on('updateSidebar', (msg) => {
+        console.log('SIDEBAR RECEIVED', msg);
+        let user = users.find(
+            u => Number(u.conversationId) === Number(msg.conversationId)
+        );
+        if (!user) {
+            user = users.find(u => Number(u.id) === Number(msg.senderId));
+            // Now update their conversationId too so future matches work
+            if (user) {
+                user.conversationId = msg.conversationId;
+            }
+    }
+        if (user) {
+            user.lastMessage = msg.text;
+            renderAllUsers();
+        }
+        else{
+            loadUser();
 
+        }
+    });
+    socket.on('updateGroupSidebar',(msg)=>{
+          let group = users.find(
+            u => Number(u.conversationId) === Number(msg.conversationId)
+        );
+        if (group) {
+            group.lastMessage = msg.text;
+            renderAllUsers();
+        }
+        else{
+            loadUser();
+        }
+    });
     loadUser();
     return container;
 }
