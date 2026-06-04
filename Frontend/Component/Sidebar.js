@@ -2,12 +2,12 @@ import { API_URL } from '../Src/Config.js';
 import { CreateGroup } from './CreateGroup.js';
 import socket from '../SocketIo_instance/socket.js';
 
-socket.on('connect', () => {
-    console.log('SIDEBAR SOCKET', socket.id);
-});
-socket.onAny((event, ...args) => {
-    console.log('SIDEBAR EVENT:', event, args);
-});
+// socket.on('connect', () => {
+//     console.log('SIDEBAR SOCKET', socket.id);
+// });
+// socket.onAny((event, ...args) => {
+//     console.log('SIDEBAR EVENT:', event, args);
+// });
 export function Sidebar({ onSelectedUser }) {
     const username = localStorage.getItem('username');
     const container = document.createElement('div');
@@ -34,6 +34,7 @@ export function Sidebar({ onSelectedUser }) {
             `;
 
     let addSubmitBtn;
+    let currentModal = null;
     let isGroup = false;
     let selectedUserIdArr = [];
     let groupArr = [];
@@ -92,21 +93,29 @@ export function Sidebar({ onSelectedUser }) {
         if (oldCreateBtn) {
             oldCreateBtn.remove();
         }
+        
         if (selectedUserIdArr.length > 0) {
             addSubmitBtn = document.createElement('button');
             addSubmitBtn.id = 'createGrpBtn';
             addSubmitBtn.textContent = 'Confirm next';
             addSubmitBtn.addEventListener('click', () => {
-                const modal = CreateGroup(selectedUserIdArr, loadUser);
-                document.body.appendChild(modal);
+                if(currentModal) {
+                    currentModal.remove();
+                }
+                currentModal = CreateGroup(selectedUserIdArr, loadUser);
+                document.body.appendChild(currentModal);
             });
+            groupDiv.appendChild(addSubmitBtn);
         }
         else {
-            const modal = CreateGroup(selectedUserIdArr, loadUser);
-            addSubmitBtn.remove();
-            document.body.removeChild(modal);
+            if(addSubmitBtn) {
+                addSubmitBtn.remove();
+            }
+            if(currentModal) {
+                currentModal.remove();
+                currentModal = null;
+            }
         }
-        groupDiv.appendChild(addSubmitBtn);
 
     }
     function renderUser(user) {
@@ -235,9 +244,6 @@ export function Sidebar({ onSelectedUser }) {
         }
 
         if (listName === '') {
-            // users.forEach(li => {
-            //     renderUser(li);
-            // });
             renderAllUsers();
             return;
         }

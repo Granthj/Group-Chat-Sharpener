@@ -9,12 +9,14 @@ import socket from '../SocketIo_instance/socket.js';
 socket.on('connect_error', (err) => {
   console.error('Socket connection error:', err.message);
 });
-export function ChatWindow(conversation, id, isGroup, name) {
+export function ChatWindow(conversation, id, isGroup, name,onBack) {
   const container = document.createElement('div');
   container.innerHTML = `
       <div class="chat-box">
 
       <div class="chat-header">
+       <button id="backBtn">←</button>
+
         <div class="avatar">${name ? name.charAt(0).toUpperCase() : ''}</div>
         <div class="header-text">
           <h3>${name || ''}</h3>
@@ -189,5 +191,14 @@ export function ChatWindow(conversation, id, isGroup, name) {
     socket.off('receiveMessage', handlePrivateMessage);
     socket.off('receiveGroup-message', handleGroupMessage);
   };
+
+  const backBtn = container.querySelector('#backBtn');
+  if (backBtn) {
+    backBtn.addEventListener('click', () => {
+        if (onBack) {
+            onBack();
+        }
+    });
+}
   return container;
 }

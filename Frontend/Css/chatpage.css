@@ -53,9 +53,20 @@
 }
 
 
-
+#backBtn {
+    display: none;
+}
 @media (max-width: 768px) {
 
+    #backBtn {
+        display: block;
+        background: transparent;
+        border: none;
+        color: white;
+        font-size: 24px;
+        cursor: pointer;
+        margin-right: 10px;
+    }
     .chat-page {
         flex-direction: column;
         height: auto;

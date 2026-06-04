@@ -10,20 +10,40 @@ export function ChatPage(navigate) {
     let selectedRecieverId = null;
     let isGroupTrue = false;
     let selectedName = null;
+    let isMobileChat = false;
     const sidebar = Sidebar({
         onSelectedUser: (conversation, id, isGroup, name) => {
-            // console.log('selected', conversation, id, isGroup,name);
+
             selectedConversation = conversation;
             selectedRecieverId = id;
             isGroupTrue = isGroup;
-            selectedName = name
+            selectedName = name;
+            isMobileChat = true;
+
             renderChatWindow();
+            updateMobileView();
         }
     });
 
     const chatContainer = document.createElement('div');
     chatContainer.className = 'chat-container';
 
+    function updateMobileView() {
+
+        if (window.innerWidth > 768) {
+            sidebar.style.display = 'flex';
+            chatContainer.style.display = 'block';
+            return;
+        }
+
+        if (isMobileChat) {
+            sidebar.style.display = 'none';
+            chatContainer.style.display = 'block';
+        } else {
+            sidebar.style.display = 'flex';
+            chatContainer.style.display = 'none';
+        }
+    }
     function renderChatWindow() {
 
         const prev = chatContainer.querySelector('[data-chat-window]');
@@ -38,7 +58,7 @@ export function ChatPage(navigate) {
              `;
             return;
         }
-        const chatwindow = ChatWindow(selectedConversation, selectedRecieverId, isGroupTrue, selectedName);
+        const chatwindow = ChatWindow(selectedConversation, selectedRecieverId, isGroupTrue, selectedName,()=>{isMobileChat = false; updateMobileView();});
         chatwindow.setAttribute('data-chat-window', 'true');
         chatContainer.appendChild(chatwindow);
     }
@@ -46,7 +66,9 @@ export function ChatPage(navigate) {
 
     container.appendChild(sidebar);
     container.appendChild(chatContainer);
+    updateMobileView();
 
+    window.addEventListener('resize', updateMobileView);
 
     return container;
 }
