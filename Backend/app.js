@@ -10,6 +10,7 @@ const ConversationParticipants = require('./Model/conversationParticipantsSchema
 const Conversation = require('./Model/conversationSchema');
 const Message = require('./Model/messageSchema');
 const User = require('./Model/signupSchema');
+const ArchivedChat = require('./Model/archiveChatSchema.js');
 const socketIO = require('../Backend/Socket_io/index.js');
 const upload = require('./Utils/multer');
 
@@ -36,6 +37,9 @@ Message.belongsTo(Conversation, { foreignKey: 'conversationId' });
 
 User.hasMany(Message, { foreignKey: 'senderId' });
 Message.belongsTo(User, { foreignKey: 'senderId' });
+
+ArchivedChat.belongsTo(User,{foreignKey:'senderId'});
+User.hasMany(ArchivedChat,{foreignKey:'senderId'});
 
 Conversation.belongsToMany(User, {
     through: ConversationParticipants,

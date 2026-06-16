@@ -3,24 +3,49 @@ const Conversation = require('../Model/conversationSchema');
 const ConversationParticipants = require('../Model/conversationParticipantsSchema');
 const Signup = require('../Model/signUpSchema');
 
-const getChat = async (req,res)=>{
+const getChat = async (req, res) => {
 
-    try{
+    try {
         const conversationId = req.params.conversationId;
 
         const message = await Message.findAll({
-            where:{
-                conversationId:conversationId
+            where: {
+                conversationId: conversationId
             },
-            include:[
+            include: [
                 {
-                    model:Signup,
-                    attributes:['name','id']
+                    model: Signup,
+                    attributes: ['name', 'id']
                 }
             ],
-            order:[['createdAt','ASC']]
+            order: [['createdAt', 'ASC']]
         });
 
+        const archivedMessage = await ArchivedChat.findAll({
+
+            where: {
+                conversationId: conversationId
+            },
+
+            include: [
+                {
+                    model: Signup,
+                    attributes: ['name', 'id']
+                }
+            ],
+
+            order: [
+                ['createdAt', 'ASC']
+            ]
+
+        });
+
+        const allMessages = [
+            ...archivedMessage,
+            ...message
+        ];
+
+        allMessages.sort((a,b)=>new Date(a.createdAt) - new Date(b.createdAt));
         // const username = await Signup.findOne({
         //     where:{
         //         id:userId
@@ -28,13 +53,13 @@ const getChat = async (req,res)=>{
         // });
         // console.log(username.name,'name of sender')
         return res.status(200).json({
-            success:true,
-            message:message
+            success: true,
+            message: allMessages
         });
     }
-    catch(err){
+    catch (err) {
         res.status(500).send("Something went wrong");
     }
-}   
+}
 
 module.exports = getChat;
