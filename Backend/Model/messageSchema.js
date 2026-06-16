@@ -20,6 +20,10 @@ const Message = db.define('Message',{
         type:DataTypes.TEXT,
         allowNull:false
     },
+    mediaUrl:{
+        type:DataTypes.STRING,
+        allowNull:true
+    },
     // messageType: {
     //     type: DataTypes.ENUM('text', 'image', 'video', 'file'),
     //     defaultValue: 'text',

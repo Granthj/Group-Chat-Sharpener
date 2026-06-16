@@ -11,6 +11,7 @@ module.exports = (socket,io)=>{
             // console.log('group message received on server',data);
             const savedMessage = await saveGroupMessages({
                 text:data.text,
+                mediaUrl:data.mediaUrl || null,
                 conversationId:data.conversationId,
                 senderId:data.senderId
             });
@@ -22,6 +23,7 @@ module.exports = (socket,io)=>{
                 senderId:savedMessage.senderId,
                 senderName:data.senderName,
                 text:savedMessage.text,
+                mediaUrl:savedMessage.mediaUrl,
                 createdAt:savedMessage.createdAt
             });
             io.to(room).emit("updateGroupSidebar",{

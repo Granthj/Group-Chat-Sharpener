@@ -24,7 +24,8 @@ module.exports = (socket, io) => {
                     receiverId: data.receiverId || null,
                     senderId: data.senderId,
                     conversationId: data.conversationId || null,
-                    text: data.text
+                    text: data.text,
+                    mediaUrl: data.mediaUrl || null
                 }
             }
             let saveMessage = null;
@@ -66,6 +67,7 @@ module.exports = (socket, io) => {
                 senderId: data.senderId,
                 receiverId: data.receiverId,
                 text: data.text,
+                mediaUrl:data.mediaUrl,
                 createdAt: saveMessage.message.createdAt,
                 messageId: saveMessage.message.id
             });

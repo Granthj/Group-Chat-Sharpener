@@ -11,6 +11,7 @@ const Conversation = require('./Model/conversationSchema');
 const Message = require('./Model/messageSchema');
 const User = require('./Model/signupSchema');
 const socketIO = require('../Backend/Socket_io/index.js');
+const upload = require('./Utils/multer');
 
 const apiRoutes = require('./Routes/apiRoutes');
 

@@ -9,7 +9,7 @@ import socket from '../SocketIo_instance/socket.js';
 socket.on('connect_error', (err) => {
   console.error('Socket connection error:', err.message);
 });
-export function ChatWindow(conversation, id, isGroup, name,onBack) {
+export function ChatWindow(conversation, id, isGroup, name, onBack) {
   const container = document.createElement('div');
   container.innerHTML = `
       <div class="chat-box">
@@ -30,6 +30,8 @@ export function ChatWindow(conversation, id, isGroup, name,onBack) {
 
       <div class="chat-input">
         <input type="text" id="msg-input" placeholder="Type a message..." />
+
+        <input type="file" id="file-input" accept="image/png,image/jpeg,image/gif"/>
         <button id="send-btn">Send</button>
       </div>
 
@@ -39,6 +41,22 @@ export function ChatWindow(conversation, id, isGroup, name,onBack) {
   let conversationId = conversation;
   let receiverId = id;
 
+  async function uploadFile(file) {
+
+    const formData = new FormData();
+
+    formData.append('file', file);
+
+    const response = await axios.post(`${API_URL}/upload`, formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data"
+        }
+      }
+    );
+
+    return response.data.url;
+  }
   async function loadChatMessage(conversationId) {
 
     try {
@@ -87,17 +105,27 @@ export function ChatWindow(conversation, id, isGroup, name,onBack) {
     else {
       msgDiv.className = 'message received'
     }
+
+    let content = "";
+
+    if (msg.text) {
+      content += `<p>${msg.text}</p>`;
+    }
+    if (msg.mediaUrl) {
+      content += `<img src="${msg.mediaUrl}" alt="media" style="width:200px; border-radius:10px;" class="message-media"/>`;
+    }
+
     if (isGroup) {
       const senderName = msg.Signup?.name || msg.senderName;
       msgDiv.innerHTML = `
             <strong>${senderName === name ? 'You' : senderName}</strong>
-            <p>${msg.text}</p>
+            ${content}
             <div class="time">${new Date(msg.createdAt).toLocaleTimeString()}</div>
           `
     }
     else {
       msgDiv.innerHTML = `
-            <p>${msg.text}</p>
+            ${content}
             <div class="time">${new Date(msg.createdAt).toLocaleTimeString()}</div>
           `
     }
@@ -124,48 +152,75 @@ export function ChatWindow(conversation, id, isGroup, name,onBack) {
   else if (conversationId) {
     socket.emit('join-room', conversationId);
   }
-  function sendMessage() {
+  async function sendMessage() {
     const msgInput = container.querySelector('#msg-input');
+
+    const fileInput = container.querySelector('#file-input')
+
     const text = msgInput.value.trim();
 
-    if (!text) {
-      return;
+    const file = fileInput.files[0];
+
+    let mediaUrl = null;
+
+    try {
+
+
+      if (file) {
+        mediaUrl = await uploadFile(file);
+      }
+
+      if (!text && !mediaUrl) {
+        return;
+      }
+      if (isGroup) {
+        const name = localStorage.getItem('username');
+        socket.emit('sendGroup-message', {
+
+          conversationId,
+          senderId: currentUserId,
+          senderName: name,
+          text,
+          mediaUrl,
+          createdAt: new Date()
+
+        });
+
+      }
+      else if (conversationId && !isGroup) {
+        socket.emit('sendMessage', {
+
+          type: 'conversation',
+          conversationId,
+          senderId: currentUserId,
+          text,
+          mediaUrl,
+          createdAt: new Date()
+
+        });
+      }
+      else {
+        socket.emit('sendMessage', {
+
+          type: 'receiver',
+          receiverId,
+          senderId: currentUserId,
+          text,
+          mediaUrl,
+          createdAt: new Date()
+        });
+      }
+      msgInput.value = '';
+      fileInput.value = '';
     }
-    if (isGroup) {
-      const name = localStorage.getItem('username');
-      socket.emit('sendGroup-message', {
+    catch (err) {
+      console.log("Upload failed:", err);
+    }
+    finally {
 
-        conversationId,
-        senderId: currentUserId,
-        senderName: name,
-        text,
-        createdAt: new Date()
-
-      });
+      sendBtn.disabled = false;
 
     }
-    else if (conversationId && !isGroup) {
-      socket.emit('sendMessage', {
-
-        type: 'conversation',
-        conversationId,
-        senderId: currentUserId,
-        text,
-        createdAt: new Date()
-
-      });
-    }
-    else {
-      socket.emit('sendMessage', {
-
-        type: 'receiver',
-        receiverId,
-        senderId: currentUserId,
-        text,
-        createdAt: new Date()
-      });
-    }
-    msgInput.value = '';
   }
   socket.off('receiveMessage');
   socket.off('receiveGroup-message');
@@ -176,7 +231,7 @@ export function ChatWindow(conversation, id, isGroup, name,onBack) {
   const msgInput = container.querySelector('#msg-input');
   msgInput.addEventListener('keypress', (e) => {
     if (e.key === 'Enter') {
-      sendMessage();
+      await sendMessage();
     }
   });
   const sendBtn = container.querySelector('#send-btn');
@@ -195,10 +250,10 @@ export function ChatWindow(conversation, id, isGroup, name,onBack) {
   const backBtn = container.querySelector('#backBtn');
   if (backBtn) {
     backBtn.addEventListener('click', () => {
-        if (onBack) {
-            onBack();
-        }
+      if (onBack) {
+        onBack();
+      }
     });
-}
+  }
   return container;
 }

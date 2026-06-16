@@ -6,6 +6,8 @@ const getChat = require('../Controller/chatMessageGetController');
 const sidebarAllUsers = require('../Controller/sidebarAllUsers');
 const groupChatController = require('../Controller/groupChartController');
 const auth = require('../Middleware/Authorization');
+const upload = require('../Controller/uploadController');
+const multer = require('../Utils/multer');
 
 Router.post('/signup', signUpController.signup);
 Router.post('/login', loginController.login);
@@ -15,6 +17,8 @@ Router.post('/login', loginController.login);
 Router.get('/message/:conversationId',getChat);
 Router.get('/get-all-users',auth,sidebarAllUsers);
 Router.post('/post-group',groupChatController.postGroupChat);
+
+Router.post('/upload', multer.single('file'),upload.uploadMedia);
 
 
 module.exports = Router;
