@@ -1,7 +1,7 @@
 const {PutObjectCommand}=require("@aws-sdk/client-s3");
 const s3=require("../Config/s3");
 
-const uploadMedia = (req,res)=>{
+const uploadMedia = async (req,res)=>{
 
     try{
         const file = req.file;

@@ -31,7 +31,7 @@ export function ChatWindow(conversation, id, isGroup, name, onBack) {
       <div class="chat-input">
         <input type="text" id="msg-input" placeholder="Type a message..." />
 
-        <input type="file" id="file-input" accept="image/png,image/jpeg,image/gif"/>
+        <input type="file" id="file-input"/>
         <button id="send-btn">Send</button>
       </div>
 
@@ -55,7 +55,10 @@ export function ChatWindow(conversation, id, isGroup, name, onBack) {
       }
     );
 
-    return response.data.url;
+    return {
+      url: response.data.url,
+      type: file.type
+    }
   }
   async function loadChatMessage(conversationId) {
 
@@ -112,7 +115,22 @@ export function ChatWindow(conversation, id, isGroup, name, onBack) {
       content += `<p>${msg.text}</p>`;
     }
     if (msg.mediaUrl) {
-      content += `<img src="${msg.mediaUrl}" alt="media" style="width:200px; border-radius:10px;" class="message-media"/>`;
+      // content += `<img src="${msg.mediaUrl}" alt="media" style="width:200px; border-radius:10px;" class="message-media"/>`;
+
+      if (msg.mediaType?.startsWith("image")) {
+        content += `<img src="${msg.mediaUrl}" style="width:200px;border-radius:10px;">`;
+      }
+
+      else if (msg.mediaType?.startsWith("video")) {
+        content += `<video controls width="250"> <source src="${msg.mediaUrl}"></video>`;
+      }
+
+      else if (msg.mediaType === "application/pdf") {
+        content += `<a href="${msg.mediaUrl}" target="_blank">Open PDF</a>`;
+      }
+      else {
+        content += `<a href="${msg.mediaUrl}" target="_blank">Download File</a>`;
+      }
     }
 
     if (isGroup) {
@@ -155,7 +173,9 @@ export function ChatWindow(conversation, id, isGroup, name, onBack) {
   async function sendMessage() {
     const msgInput = container.querySelector('#msg-input');
 
-    const fileInput = container.querySelector('#file-input')
+    const fileInput = container.querySelector('#file-input');
+
+    const sendBtn = container.querySelector('#send-btn');
 
     const text = msgInput.value.trim();
 
@@ -163,11 +183,15 @@ export function ChatWindow(conversation, id, isGroup, name, onBack) {
 
     let mediaUrl = null;
 
-    try {
+    let mediaType=null;
 
+    try {
+      sendBtn.disabled=true;
 
       if (file) {
-        mediaUrl = await uploadFile(file);
+        const upload = await uploadFile(file);
+        mediaUrl = upload.url;
+        mediaType = upload.type;
       }
 
       if (!text && !mediaUrl) {
@@ -182,6 +206,7 @@ export function ChatWindow(conversation, id, isGroup, name, onBack) {
           senderName: name,
           text,
           mediaUrl,
+          mediaType,
           createdAt: new Date()
 
         });
@@ -195,6 +220,7 @@ export function ChatWindow(conversation, id, isGroup, name, onBack) {
           senderId: currentUserId,
           text,
           mediaUrl,
+          mediaType,
           createdAt: new Date()
 
         });
@@ -207,6 +233,7 @@ export function ChatWindow(conversation, id, isGroup, name, onBack) {
           senderId: currentUserId,
           text,
           mediaUrl,
+          mediaType,
           createdAt: new Date()
         });
       }
@@ -214,7 +241,7 @@ export function ChatWindow(conversation, id, isGroup, name, onBack) {
       fileInput.value = '';
     }
     catch (err) {
-      console.log("Upload failed:", err);
+      console.log("Upload error:", err);
     }
     finally {
 
@@ -229,7 +256,7 @@ export function ChatWindow(conversation, id, isGroup, name, onBack) {
   socket.on('receiveGroup-message', handleGroupMessage);
 
   const msgInput = container.querySelector('#msg-input');
-  msgInput.addEventListener('keypress', (e) => {
+  msgInput.addEventListener('keypress', async(e) => {
     if (e.key === 'Enter') {
       await sendMessage();
     }
