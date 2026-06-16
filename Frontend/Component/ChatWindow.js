@@ -1,10 +1,6 @@
 import { API_URL } from '../Src/Config.js';
 import socket from '../SocketIo_instance/socket.js';
-// const socket = io('http://localhost:5000', {
-//   auth: {
-//     token: localStorage.getItem('token')
-//   }
-// });
+
 
 socket.on('connect_error', (err) => {
   console.error('Socket connection error:', err.message);
@@ -27,7 +23,8 @@ export function ChatWindow(conversation, id, isGroup, name, onBack) {
       <div class="messages" id="messages">
 
       </div>
-
+      <div id="ai-suggestions"></div>
+      <div id="smart-replies"></div>
       <div class="chat-input">
         <input type="text" id="msg-input" placeholder="Type a message..." />
 
@@ -41,6 +38,86 @@ export function ChatWindow(conversation, id, isGroup, name, onBack) {
   let conversationId = conversation;
   let receiverId = id;
 
+  async function getAiSuggestions(text) {
+
+    try {
+      if (text.length < 3) {
+        container.querySelector('#ai-suggestions').innerHTML = '';
+        return;
+      }
+
+      const response = await axios.post(`${API_URL}/ai/predict`, {
+        text
+      });
+
+      showAiSuggestions(response.data.suggestions);
+    }
+    catch (err) {
+      console.log(err, 'Ai suggestions error');
+    }
+  }
+  async function getSmartReplies(message) {
+
+    try {
+      const res = await axios.post(`${API_URL}/ai/reply`, {
+        message
+      });
+      showReplies(res.data.replies);
+    }
+    catch (err) {
+      console.log("Smart reply error:", err);
+    }
+  }
+  function showAiSuggestions(suggestions) {
+    const box = container.querySelector('#ai-suggestions');
+
+    box.innerHTML = "";
+
+    if(!suggestions || suggestions.length === 0) return;
+    
+    suggestions.forEach(word => {
+      const btn = document.createElement('button');
+
+      btn.textContent = word;
+
+      btn.onclick = () => {
+        const input = container.querySelector('#msg-input');
+
+        input.value += " " + word;
+        box.innerHTML = "";
+      }
+      box.appendChild(btn);
+    })
+  }
+  function showReplies(replies) {
+
+    const box = container.querySelector('#smart-replies');
+
+    box.innerHTML = "";
+
+
+    replies.forEach(reply => {
+
+      const btn = document.createElement('button');
+
+      btn.textContent = reply;
+
+
+      btn.onclick = () => {
+
+        const input = container.querySelector('#msg-input');
+
+        input.value = reply;
+
+        box.innerHTML = "";
+      };
+
+
+      box.appendChild(btn);
+
+    });
+
+  }
   async function uploadFile(file) {
 
     const formData = new FormData();
@@ -155,6 +232,9 @@ export function ChatWindow(conversation, id, isGroup, name, onBack) {
     if (conversationId && Number(conversationId) === Number(msg.conversationId)) {
       addMessage(msg);
     }
+    if (msg.senderId !== currentUserId) {
+      getSmartReplies(msg.text);
+    }
   }
 
   function handleGroupMessage(msg) {
@@ -162,9 +242,12 @@ export function ChatWindow(conversation, id, isGroup, name, onBack) {
     if (Number(conversationId) === Number(msg.conversationId)) {
       addMessage(msg);
     }
+    if (msg.senderId !== currentUserId) {
+      getSmartReplies(msg.text);
+    }
   }
   if (isGroup && conversationId) {
-    console.log("joining group room", conversationId);
+    // console.log("joining group room", conversationId);
     socket.emit('join-group-room', conversationId);
   }
   else if (conversationId) {
@@ -183,10 +266,13 @@ export function ChatWindow(conversation, id, isGroup, name, onBack) {
 
     let mediaUrl = null;
 
-    let mediaType=null;
+    let mediaType = null;
 
     try {
-      sendBtn.disabled=true;
+      sendBtn.disabled = true;
+
+      container.querySelector('#ai-suggestions').innerHTML="";
+      container.querySelector('#smart-replies').innerHTML="";
 
       if (file) {
         const upload = await uploadFile(file);
@@ -256,7 +342,15 @@ export function ChatWindow(conversation, id, isGroup, name, onBack) {
   socket.on('receiveGroup-message', handleGroupMessage);
 
   const msgInput = container.querySelector('#msg-input');
-  msgInput.addEventListener('keypress', async(e) => {
+  let typingTimer;
+  msgInput.addEventListener('input', (e) => {
+    clearTimeout(typingTimer);
+
+    typingTimer = setTimeout(() => {
+      getAiSuggestions(msgInput.value);
+    }, 700);
+  });
+  msgInput.addEventListener('keypress', async (e) => {
     if (e.key === 'Enter') {
       await sendMessage();
     }

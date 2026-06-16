@@ -147,3 +147,66 @@
 .chat-input button:hover {
   background-color: #064e46;
 }
+/* AI suggestion box */
+#ai-suggestions,
+#smart-replies {
+  display: flex;
+  gap: 8px;
+  padding: 6px 12px;
+  background-color: #f8f8f8;
+  overflow-x: auto;
+  flex-shrink: 0;
+}
+
+
+/* AI buttons */
+#ai-suggestions button,
+#smart-replies button {
+
+  background-color: white;
+  color: #075e54;
+
+  border: 1px solid #075e54;
+
+  padding: 6px 12px;
+
+  border-radius: 18px;
+
+  font-size: 13px;
+
+  cursor: pointer;
+
+  white-space: nowrap;
+
+  transition: 0.2s ease;
+}
+
+
+/* hover effect */
+#ai-suggestions button:hover,
+#smart-replies button:hover {
+
+  background-color: #075e54;
+
+  color: white;
+
+}
+
+
+/* scrollbar for many suggestions */
+#ai-suggestions::-webkit-scrollbar,
+#smart-replies::-webkit-scrollbar {
+
+  height: 3px;
+
+}
+
+
+#ai-suggestions::-webkit-scrollbar-thumb,
+#smart-replies::-webkit-scrollbar-thumb {
+
+  background-color: #bbb;
+
+  border-radius: 10px;
+
+}

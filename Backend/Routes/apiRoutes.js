@@ -8,6 +8,7 @@ const groupChatController = require('../Controller/groupChartController');
 const auth = require('../Middleware/Authorization');
 const upload = require('../Controller/uploadController');
 const multer = require('../Utils/multer');
+const aiController = require('../Controller/aiController.js');
 
 Router.post('/signup', signUpController.signup);
 Router.post('/login', loginController.login);
@@ -19,6 +20,9 @@ Router.get('/get-all-users',auth,sidebarAllUsers);
 Router.post('/post-group',groupChatController.postGroupChat);
 
 Router.post('/upload', multer.single('file'),upload.uploadMedia);
+
+Router.post('/ai/predict',aiController.predictiveReply);
+Router.post('/ai/reply',aiController.smartReply);
 
 
 module.exports = Router;
