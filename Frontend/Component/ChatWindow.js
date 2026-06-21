@@ -1,11 +1,10 @@
 import { API_URL } from '../Src/Config.js';
 import socket from '../SocketIo_instance/socket.js';
 
-
 socket.on('connect_error', (err) => {
   console.error('Socket connection error:', err.message);
 });
-export function ChatWindow(conversation, id, isGroup, name, onBack) {
+export function ChatWindow(conversation, id, isGroup, name,onBack) {
   const container = document.createElement('div');
   container.innerHTML = `
       <div class="chat-box">
@@ -37,106 +36,25 @@ export function ChatWindow(conversation, id, isGroup, name, onBack) {
   const currentUserId = Number(localStorage.getItem('userId'));
   let conversationId = conversation;
   let receiverId = id;
-
-  async function getAiSuggestions(text) {
-
-    try {
-      if (text.length < 3) {
-        container.querySelector('#ai-suggestions').innerHTML = '';
-        return;
-      }
-
-      const response = await axios.post(`${API_URL}/ai/predict`, {
-        text
-      });
-
-      showAiSuggestions(response.data.suggestions);
-    }
-    catch (err) {
-      console.log(err, 'Ai suggestions error');
-    }
-  }
-  async function getSmartReplies(message) {
-
-    try {
-      const res = await axios.post(`${API_URL}/ai/reply`, {
-        message
-      });
-      showReplies(res.data.replies);
-    }
-    catch (err) {
-      console.log("Smart reply error:", err);
-    }
-  }
-  function showAiSuggestions(suggestions) {
-    const box = container.querySelector('#ai-suggestions');
-
-    box.innerHTML = "";
-
-    if(!suggestions || suggestions.length === 0) return;
-    
-    suggestions.forEach(word => {
-      const btn = document.createElement('button');
-
-      btn.textContent = word;
-
-      btn.onclick = () => {
-        const input = container.querySelector('#msg-input');
-
-        input.value += " " + word;
-        box.innerHTML = "";
-      }
-      box.appendChild(btn);
-    })
-  }
-  function showReplies(replies) {
-
-    const box = container.querySelector('#smart-replies');
-
-    box.innerHTML = "";
-
-
-    replies.forEach(reply => {
-
-      const btn = document.createElement('button');
-
-      btn.textContent = reply;
-
-
-      btn.onclick = () => {
-
-        const input = container.querySelector('#msg-input');
-
-        input.value = reply;
-
-        box.innerHTML = "";
-      };
-
-
-      box.appendChild(btn);
-
-    });
-
-  }
-  async function uploadFile(file) {
-
-    const formData = new FormData();
-
-    formData.append('file', file);
-
-    const response = await axios.post(`${API_URL}/upload`, formData,
-      {
-        headers: {
-          "Content-Type": "multipart/form-data"
+    async function uploadFile(file) {
+  
+      const formData = new FormData();
+      
+      formData.append('file', file);
+  
+      const response = await axios.post(`${API_URL}/upload`, formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data"
+          }
         }
+      );
+  
+      return {
+        url: response.data.url,
+        type: file.type
       }
-    );
-
-    return {
-      url: response.data.url,
-      type: file.type
     }
-  }
   async function loadChatMessage(conversationId) {
 
     try {
@@ -174,7 +92,6 @@ export function ChatWindow(conversation, id, isGroup, name, onBack) {
 
     const msgContainer = container.querySelector('#messages');
 
-    // msgContainer.innerHTML = '';
     const msgDiv = document.createElement('div');
 
     const name = localStorage.getItem('username');
@@ -187,29 +104,36 @@ export function ChatWindow(conversation, id, isGroup, name, onBack) {
     }
 
     let content = "";
-
     if (msg.text) {
       content += `<p>${msg.text}</p>`;
     }
     if (msg.mediaUrl) {
-      // content += `<img src="${msg.mediaUrl}" alt="media" style="width:200px; border-radius:10px;" class="message-media"/>`;
-
-      if (msg.mediaType?.startsWith("image")) {
-        content += `<img src="${msg.mediaUrl}" style="width:200px;border-radius:10px;">`;
+      let type = msg.mediaType ? msg.mediaType.toLowerCase() : "";
+      
+      if (!type) {
+        const lowerUrl = msg.mediaUrl.toLowerCase();
+        if (lowerUrl.includes(".jpg") || lowerUrl.includes(".jpeg") || lowerUrl.includes(".png") || lowerUrl.includes(".gif") || lowerUrl.includes(".webp")) {
+          type = "image";
+        } else if (lowerUrl.includes(".mp4") || lowerUrl.includes(".webm") || lowerUrl.includes(".mov")) {
+          type = "video";
+        } else if (lowerUrl.includes(".pdf")) {
+          type = "pdf";
+        }
       }
 
-      else if (msg.mediaType?.startsWith("video")) {
+      if (type.startsWith("image") || type === "image") {
+        content += `<img src="${msg.mediaUrl}" style="width:200px;border-radius:10px;" alt="Shared Image">`;
+      } 
+      else if (type.startsWith("video") || type === "video") {
         content += `<video controls width="250"> <source src="${msg.mediaUrl}"></video>`;
-      }
-
-      else if (msg.mediaType === "application/pdf") {
-        content += `<a href="${msg.mediaUrl}" target="_blank">Open PDF</a>`;
-      }
+      } 
+      else if (type === "application/pdf" || type === "pdf") {
+        content += `<a href="${msg.mediaUrl}" target="_blank" style="color: #007bff; font-weight: bold; text-decoration: underline;">📄 Open PDF File</a>`;
+      } 
       else {
-        content += `<a href="${msg.mediaUrl}" target="_blank">Download File</a>`;
+        content += `<a href="${msg.mediaUrl}" target="_blank" style="color: #007bff; font-weight: bold; text-decoration: underline;">📁 Download Attached File</a>`;
       }
     }
-
     if (isGroup) {
       const senderName = msg.Signup?.name || msg.senderName;
       msgDiv.innerHTML = `
@@ -220,7 +144,7 @@ export function ChatWindow(conversation, id, isGroup, name, onBack) {
     }
     else {
       msgDiv.innerHTML = `
-            ${content}
+            ${content}  
             <div class="time">${new Date(msg.createdAt).toLocaleTimeString()}</div>
           `
     }
@@ -229,11 +153,15 @@ export function ChatWindow(conversation, id, isGroup, name, onBack) {
   }
   function handlePrivateMessage(msg) {
     if (isGroup) return;
+    if(!conversationId){
+      conversationId = conversationId ? msg.dataValues.conversationId : null;
+
+      addMessage(msg);
+
+      return;
+    }
     if (conversationId && Number(conversationId) === Number(msg.conversationId)) {
       addMessage(msg);
-    }
-    if (msg.senderId !== currentUserId) {
-      getSmartReplies(msg.text);
     }
   }
 
@@ -242,12 +170,8 @@ export function ChatWindow(conversation, id, isGroup, name, onBack) {
     if (Number(conversationId) === Number(msg.conversationId)) {
       addMessage(msg);
     }
-    if (msg.senderId !== currentUserId) {
-      getSmartReplies(msg.text);
-    }
   }
   if (isGroup && conversationId) {
-    // console.log("joining group room", conversationId);
     socket.emit('join-group-room', conversationId);
   }
   else if (conversationId) {
@@ -259,7 +183,6 @@ export function ChatWindow(conversation, id, isGroup, name, onBack) {
     const fileInput = container.querySelector('#file-input');
 
     const sendBtn = container.querySelector('#send-btn');
-
     const text = msgInput.value.trim();
 
     const file = fileInput.files[0];
@@ -268,18 +191,17 @@ export function ChatWindow(conversation, id, isGroup, name, onBack) {
 
     let mediaType = null;
 
-    try {
+    try{
       sendBtn.disabled = true;
 
       container.querySelector('#ai-suggestions').innerHTML="";
       container.querySelector('#smart-replies').innerHTML="";
-
+    
       if (file) {
         const upload = await uploadFile(file);
         mediaUrl = upload.url;
         mediaType = upload.type;
       }
-
       if (!text && !mediaUrl) {
         return;
       }
@@ -305,7 +227,7 @@ export function ChatWindow(conversation, id, isGroup, name, onBack) {
           conversationId,
           senderId: currentUserId,
           text,
-          mediaUrl,
+          mediaUrl,          // This part of mediaUrl and mediaType may cause bug be careful!
           mediaType,
           createdAt: new Date()
 
@@ -325,16 +247,14 @@ export function ChatWindow(conversation, id, isGroup, name, onBack) {
       }
       msgInput.value = '';
       fileInput.value = '';
-    }
-    catch (err) {
-      console.log("Upload error:", err);
-    }
-    finally {
-
-      sendBtn.disabled = false;
-
-    }
   }
+  catch(err){
+    console.log("Upload error:", err);
+  }
+  finally {
+    sendBtn.disabled = false;
+  }
+}
   socket.off('receiveMessage');
   socket.off('receiveGroup-message');
 
@@ -342,17 +262,9 @@ export function ChatWindow(conversation, id, isGroup, name, onBack) {
   socket.on('receiveGroup-message', handleGroupMessage);
 
   const msgInput = container.querySelector('#msg-input');
-  let typingTimer;
-  msgInput.addEventListener('input', (e) => {
-    clearTimeout(typingTimer);
-
-    typingTimer = setTimeout(() => {
-      getAiSuggestions(msgInput.value);
-    }, 700);
-  });
-  msgInput.addEventListener('keypress', async (e) => {
+  msgInput.addEventListener('keypress', (e) => {
     if (e.key === 'Enter') {
-      await sendMessage();
+      sendMessage();
     }
   });
   const sendBtn = container.querySelector('#send-btn');
@@ -367,14 +279,18 @@ export function ChatWindow(conversation, id, isGroup, name, onBack) {
     socket.off('receiveMessage', handlePrivateMessage);
     socket.off('receiveGroup-message', handleGroupMessage);
   };
-
+  msgInput.addEventListener('keypress', async (e) => {
+    if (e.key === 'Enter') {
+      await sendMessage();
+    }
+  });
   const backBtn = container.querySelector('#backBtn');
   if (backBtn) {
     backBtn.addEventListener('click', () => {
-      if (onBack) {
-        onBack();
-      }
+        if (onBack) {
+            onBack();
+        }
     });
-  }
+}
   return container;
 }

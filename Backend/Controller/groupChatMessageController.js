@@ -2,7 +2,7 @@
 const Message = require('../Model/messageSchema');
 const Conversation = require('../Model/conversationSchema');
 
-const saveGroupMessages = async({text,conversationId,senderId})=>{
+const saveGroupMessages = async({text,conversationId,senderId,mediaUrl,mediaType})=>{
 
     try{
 
@@ -10,6 +10,8 @@ const saveGroupMessages = async({text,conversationId,senderId})=>{
             text,
             conversationId,
             senderId,
+            mediaUrl,
+            mediaType
         });
         const conversation = await Conversation.update({
             lastMessageId:message.id,

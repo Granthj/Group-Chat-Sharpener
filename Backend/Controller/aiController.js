@@ -31,7 +31,7 @@ const predictiveReply = async (req, res) => {
     }
 }
 
-const smartReply = (req,res)=>{
+const smartReply = async (req,res)=>{
 
     const {message} = req.body;
 

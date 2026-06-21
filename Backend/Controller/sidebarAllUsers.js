@@ -8,7 +8,6 @@ const getAllUsers = async(req,res)=>{
 
     try{
         let currentUserId = req.userId;
-        console.log(currentUserId);
         const users = await User.findAll({
             where:{
                 id:{
@@ -47,7 +46,8 @@ const getAllUsers = async(req,res)=>{
                     name:user.name,
                     conversationId:null,
                     lastMessage:null,
-                    lastMessageAt:null
+                    lastMessageAt:null,
+                    lastMessageType:null
                 });
 
                 continue;
@@ -64,7 +64,8 @@ const getAllUsers = async(req,res)=>{
                 name:user.name,
                 conversationId:conversation.id,
                 lastMessage:lastMessage ? lastMessage.text : null,  // othere fields are there as well so we need to filter by .text
-                lastMessageAt:conversation.lastMessageAt
+                lastMessageAt:conversation.lastMessageAt,
+                lastMessageType:lastMessage ? lastMessage.mediaType : null
             });
             
         }
@@ -87,13 +88,13 @@ const getAllUsers = async(req,res)=>{
             let lastMessage = null;
             // if(group.lastMessageId){
                 lastMessage = await Message.findByPk(group.lastMessageId);
-                // console.log(group.conversationId,'group conversation id in sidebar');
                 sidebarGroups.push({
                     isGroup:true,
                     groupName:group.groupName,
                     conversationId:group.id,
                     lastMessage:lastMessage?lastMessage.text:null,
-                    lastMessageAt:group.lastMessageAt
+                    lastMessageAt:group.lastMessageAt,
+                    lastMessageType:lastMessage ? lastMessage.mediaType : null
                 })
             // }
         }

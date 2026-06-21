@@ -24,11 +24,11 @@ const ArchivedChat = db.define('ArchivedChat', {
         type:DataTypes.TEXT,
         allowNull:true
     },
-     mediaUrl: {
+    mediaUrl:{
         type: DataTypes.STRING,
         allowNull: true
     },
-    mediaType: {
+    mediaType:{
         type: DataTypes.STRING,
         allowNull: true
     }

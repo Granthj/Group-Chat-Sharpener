@@ -2,6 +2,7 @@ const Message = require('../Model/messageSchema');
 const Conversation = require('../Model/conversationSchema');
 const ConversationParticipants = require('../Model/conversationParticipantsSchema');
 const Signup = require('../Model/signUpSchema');
+const ArchivedChat = require('../Model/archiveChatSchema');
 
 const getChat = async (req, res) => {
 
@@ -58,6 +59,7 @@ const getChat = async (req, res) => {
         });
     }
     catch (err) {
+        console.log(err,"getmessage")
         res.status(500).send("Something went wrong");
     }
 }

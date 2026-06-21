@@ -9,9 +9,11 @@ const chatMessage = async (req, res) => {
             senderId,
             receiverId,
             text,
-            conversationId
+            conversationId,
+            mediaUrl,
+            mediaType
         } = req.body;
-
+        console.log(mediaUrl,mediaType,text,'abcddd');
         let conversation = null;
 
         if (conversationId) {
@@ -88,7 +90,9 @@ const chatMessage = async (req, res) => {
         const addMessage = await Message.create({
             conversationId: conversation.id,
             senderId,
-            text
+            text,
+            mediaUrl,
+            mediaType
         });
 
         await conversation.update({

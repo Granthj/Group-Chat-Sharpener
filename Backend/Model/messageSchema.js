@@ -20,11 +20,11 @@ const Message = db.define('Message', {
         type: DataTypes.TEXT,
         allowNull: false
     },
-    mediaUrl: {
-        type: DataTypes.STRING,
+    mediaUrl:{
+        type: DataTypes.TEXT,
         allowNull: true
     },
-    mediaType: {
+    mediaType:{
         type: DataTypes.STRING,
         allowNull: true
     }

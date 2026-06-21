@@ -69,13 +69,13 @@ export function Signup(navigate){
                 document.querySelectorAll('.alert').forEach(element=>element.remove());
 
                 if(errors.email){
-                    const p = container.createElement('p');
+                    const p = document.createElement('p');
                     p.className = 'alert';
                     p.textContent = err.response.data.errors.email;
                     inputEmail.insertAdjacentElement('afterend', p);
                 }
                 if(errors.phone){
-                    const p = container.createElement('p');
+                    const p = document.createElement('p');
                     p.className = 'alert';
                     p.textContent = err.response.data.errors.phone;
                     phone.insertAdjacentElement('afterend', p);

@@ -1,5 +1,4 @@
-
-const chatMessage = require('../../Controller/chatMessagePostController');
+const chatMessage = require('../../Controller/chatMessagePostController.js');
 const socketMap = new Map();
 
 module.exports = (socket, io) => {
@@ -11,13 +10,10 @@ module.exports = (socket, io) => {
     socket.on('disconnect', () => {
         socketMap.delete(String(socket.user));
     });
-    // console.log('New socket connection:', socket.id, 'User ID:', socket.user);
     socket.on("join-room", async (conversationId) => {
-        // console.log('Joining room:', conversationId);
         socket.join(`conversation_${conversationId}`);
     });
     socket.on("sendMessage", async (data) => {
-        // console.log('message received on server', data);
         try {
             const req = {
                 body: {
@@ -25,7 +21,8 @@ module.exports = (socket, io) => {
                     senderId: data.senderId,
                     conversationId: data.conversationId || null,
                     text: data.text,
-                    mediaUrl: data.mediaUrl || null
+                    mediaUrl: data.mediaUrl || null,
+                    mediaType: data.mediaType || null
                 }
             }
             let saveMessage = null;
@@ -49,12 +46,6 @@ module.exports = (socket, io) => {
                     const socketId = item[0];
                     const socketObject = item[1];
 
-                    console.log(
-                        'connected user',
-                        socketObject.user,
-                        'receiver',
-                        data.receiverId
-                    );
                     if (socketObject.user === data.receiverId) {
                         socketObject.join(room);  // here socketObject not socket.join because by default socket.join is current user who is sending and socketObject is an iterative object have many connection match it and socketObject.join() in room simple
                         break;
@@ -68,17 +59,10 @@ module.exports = (socket, io) => {
                 receiverId: data.receiverId,
                 text: data.text,
                 mediaUrl:data.mediaUrl,
+                mediaType:data.mediaType,
                 createdAt: saveMessage.message.createdAt,
                 messageId: saveMessage.message.id
             });
-            // console.log('=== SIDEBAR UPDATE DEBUG ===');
-            // console.log('socketMap contents:', [...socketMap]);
-            // console.log('data.senderId:', data.senderId, typeof data.senderId);
-            // console.log('data.receiverId:', data.receiverId, typeof data.receiverId);
-            // console.log('sender lookup key:', String(data.senderId));
-            // console.log('receiver lookup key:', String(data.receiverId));
-            // console.log('senderSocketId found:', socketMap.get(String(data.senderId)));
-            // console.log('receiverSocketId found:', socketMap.get(String(data.receiverId)));
 
             const receiverId = data.receiverId || saveMessage.receiverId;
             const senderSocketId = socketMap.get(String(data.senderId));
@@ -89,7 +73,6 @@ module.exports = (socket, io) => {
                     senderId: data.senderId,
                     text: data.text
                 });
-                // console.log('updateSidebar emitted to sender:', senderSocketId);
             }
             if (receiverSocketId) {
                 io.to(receiverSocketId).emit('updateSidebar', {
@@ -97,7 +80,6 @@ module.exports = (socket, io) => {
                     senderId: data.senderId,
                     text: data.text
                 });
-                // console.log('updateSidebar emitted to receiver:', receiverSocketId);
             }
         }
         catch (err) {

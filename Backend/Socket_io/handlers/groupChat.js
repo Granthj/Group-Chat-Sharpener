@@ -8,10 +8,11 @@ module.exports = (socket,io)=>{
     });
     socket.on("sendGroup-message",async (data)=>{
         try{
-            // console.log('group message received on server',data);
+
             const savedMessage = await saveGroupMessages({
                 text:data.text,
                 mediaUrl:data.mediaUrl || null,
+                mediaType:data.mediaType || null,
                 conversationId:data.conversationId,
                 senderId:data.senderId
             });
@@ -24,6 +25,7 @@ module.exports = (socket,io)=>{
                 senderName:data.senderName,
                 text:savedMessage.text,
                 mediaUrl:savedMessage.mediaUrl,
+                mediaType:savedMessage.mediaType,
                 createdAt:savedMessage.createdAt
             });
             io.to(room).emit("updateGroupSidebar",{

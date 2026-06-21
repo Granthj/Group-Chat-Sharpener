@@ -2,12 +2,7 @@ import { API_URL } from '../Src/Config.js';
 import { CreateGroup } from './CreateGroup.js';
 import socket from '../SocketIo_instance/socket.js';
 
-// socket.on('connect', () => {
-//     console.log('SIDEBAR SOCKET', socket.id);
-// });
-// socket.onAny((event, ...args) => {
-//     console.log('SIDEBAR EVENT:', event, args);
-// });
+
 export function Sidebar({ onSelectedUser }) {
     const username = localStorage.getItem('username');
     const container = document.createElement('div');
@@ -70,10 +65,8 @@ export function Sidebar({ onSelectedUser }) {
 
         userList.forEach(user => {
             renderUser(user);
-            // console.log(user,'rendering user in sidebar');
         });
         groupList.forEach(grp => {
-            // console.log(grp,'rendering group in sidebar');
             renderGroup(grp);
         });
     }
@@ -102,7 +95,22 @@ export function Sidebar({ onSelectedUser }) {
                 if(currentModal) {
                     currentModal.remove();
                 }
-                currentModal = CreateGroup(selectedUserIdArr, loadUser);
+                currentModal = CreateGroup(selectedUserIdArr, ()=>{
+                    selectedUserIdArr = [];
+                    isGroup = false;
+
+                    if(addSubmitBtn){
+                        addSubmitBtn.remove();
+                        addSubmitBtn = null;
+                    }
+                    if(currentModal){
+                        currentModal.remove();
+                        currentModal = null;
+                    }
+                    loadUser();
+
+                    renderAllUsers();
+                });
                 document.body.appendChild(currentModal);
             });
             groupDiv.appendChild(addSubmitBtn);
@@ -144,6 +152,10 @@ export function Sidebar({ onSelectedUser }) {
         
         <p class="last-message">
         ${user.lastMessage || ''}
+        </p>
+
+        <p class="last-message-type">
+        ${user.lastMessageType || ''}
         </p>
         </div>
         
@@ -210,6 +222,10 @@ export function Sidebar({ onSelectedUser }) {
                 ${group.lastMessage || ''}
             </p>
 
+            <p class="last-message-type">
+                ${group.lastMessageType || ''}
+            </p>
+
         </div>
         `;
         singleGroup.addEventListener('click', () => {
@@ -217,7 +233,6 @@ export function Sidebar({ onSelectedUser }) {
                 li.classList.remove('active');
             });
             singleGroup.classList.add('active');
-            // console.log(group.conversationId,'sidebar group id');
             onSelectedUser(group.conversationId, null, true, group.groupName);
         });
         conversationList.appendChild(singleGroup);
@@ -266,7 +281,6 @@ export function Sidebar({ onSelectedUser }) {
     // socket.off('updateSidebar');
     // socket.off('receiveGroup-message');
     socket.on('updateSidebar', (msg) => {
-        console.log('SIDEBAR RECEIVED', msg);
         let user = users.find(
             u => Number(u.conversationId) === Number(msg.conversationId)
         );
