@@ -25,7 +25,7 @@ const ArchivedChat = db.define('ArchivedChat', {
         allowNull:true
     },
     mediaUrl:{
-        type: DataTypes.STRING,
+        type: DataTypes.TEXT,
         allowNull: true
     },
     mediaType:{

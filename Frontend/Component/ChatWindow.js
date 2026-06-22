@@ -36,6 +36,85 @@ export function ChatWindow(conversation, id, isGroup, name,onBack) {
   const currentUserId = Number(localStorage.getItem('userId'));
   let conversationId = conversation;
   let receiverId = id;
+    async function getAiSuggestions(text) {
+  
+      try {
+        if (text.length < 3) {
+          container.querySelector('#ai-suggestions').innerHTML = '';
+          return;
+        }
+  
+        const response = await axios.post(`${API_URL}/ai/predict`, {
+          text
+        });
+  
+        showAiSuggestions(response.data.suggestions);
+      }
+      catch (err) {
+        console.log(err, 'Ai suggestions error');
+      }
+    }
+    async function getSmartReplies(message) {
+      try {
+        const res = await axios.post(`${API_URL}/ai/reply`, {
+          message
+        });
+        showReplies(res.data.replies);
+      }
+      catch (err) {
+        console.log("Smart reply error:", err);
+      }
+    }
+    function showAiSuggestions(suggestions) {
+      const box = container.querySelector('#ai-suggestions');
+  
+      box.innerHTML = "";
+  
+      if(!suggestions || suggestions.length === 0) return;
+      
+      suggestions.forEach(word => {
+        const btn = document.createElement('button');
+  
+        btn.textContent = word;
+  
+        btn.onclick = () => {
+          const input = container.querySelector('#msg-input');
+  
+          input.value += " " + word;
+          box.innerHTML = "";
+        }
+        box.appendChild(btn);
+      })
+    }
+    function showReplies(replies) {
+  
+      const box = container.querySelector('#smart-replies');
+  
+      box.innerHTML = "";
+  
+  
+      replies.forEach(reply => {
+  
+        const btn = document.createElement('button');
+  
+        btn.textContent = reply;
+  
+  
+        btn.onclick = () => {
+  
+          const input = container.querySelector('#msg-input');
+  
+          input.value = reply;
+  
+          box.innerHTML = "";
+        };
+  
+  
+        box.appendChild(btn);
+  
+      });
+  
+    }
     async function uploadFile(file) {
   
       const formData = new FormData();
@@ -158,10 +237,13 @@ export function ChatWindow(conversation, id, isGroup, name,onBack) {
 
       addMessage(msg);
 
-      return;
+      // return;
     }
-    if (conversationId && Number(conversationId) === Number(msg.conversationId)) {
+    else if (conversationId && Number(conversationId) === Number(msg.conversationId)) {
       addMessage(msg);
+    }
+    if (msg.senderId !== currentUserId) {
+      getSmartReplies(msg.text);
     }
   }
 
@@ -169,6 +251,9 @@ export function ChatWindow(conversation, id, isGroup, name,onBack) {
     if (!isGroup) return;
     if (Number(conversationId) === Number(msg.conversationId)) {
       addMessage(msg);
+    }
+    if (msg.senderId !== currentUserId) {
+      getSmartReplies(msg.text);
     }
   }
   if (isGroup && conversationId) {
@@ -262,6 +347,14 @@ export function ChatWindow(conversation, id, isGroup, name,onBack) {
   socket.on('receiveGroup-message', handleGroupMessage);
 
   const msgInput = container.querySelector('#msg-input');
+  let typingTimer;
+  msgInput.addEventListener('input', (e) => {
+    clearTimeout(typingTimer);
+
+    typingTimer = setTimeout(() => {
+      getAiSuggestions(msgInput.value);
+    }, 700);
+  });
   msgInput.addEventListener('keypress', (e) => {
     if (e.key === 'Enter') {
       sendMessage();

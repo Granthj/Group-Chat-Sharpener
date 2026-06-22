@@ -20,7 +20,16 @@ const predictiveReply = async (req, res) => {
             Return only JSON array.
         `;
 
-        const result = await model.generateContent(prompt);
+        const result = await model.generateContent({
+            contents: [{ role: 'user', parts: [{ text: prompt }] }],
+            generationConfig: {
+                responseMimeType: "application/json",
+                responseSchema: {
+                    type: "ARRAY",
+                    items: { type: "STRING" }
+                }
+            }
+        });
         const response = result.response.text();
 
         res.json({suggestions:JSON.parse(response)});
@@ -47,7 +56,16 @@ const smartReply = async (req,res)=>{
 
 `;
 
-    const result = await model.generateContent(prompt);
+    const result = await model.generateContent({
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
+        generationConfig: {
+            responseMimeType: "application/json",
+            responseSchema: {
+                type: "ARRAY",
+                items: { type: "STRING" }
+            }
+        }
+    });
     const response = result.response.text();
 
     res.json({replies:JSON.parse(response)});
